@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Day 22: AI Content Engine with Telegram Approval\n\n\n**Setup:**\n- Connect: OpenAI API key\n- Connect: Telegram bot token (BotFather se)\n- Connect: LinkedIn (OAuth)\n- Connect: Google Sheets (Google OAuth)\n- RSS ko apni niche ke feed se badlo (Reddit: https://www.reddit.com/r/n8n/.rss)\n- LinkedIn credential connect karke node mein apna profile chuno\n\nCourse: Day 22 lesson page",
+        "content": "## Day 22: AI Content Engine with Telegram Approval\n\n\n**Setup:**\n- Connect: OpenAI API key\n- Connect: Telegram bot token (BotFather se)\n- Connect: LinkedIn (OAuth)\n- Connect: Google Sheets (Google OAuth)\n- RSS ko apni niche ke feed se badlo (Reddit: https://www.reddit.com/r/n8n/.rss)\n- LinkedIn credential connect karke node mein apna profile chuno\n- \"Posts\" tab headers: date, topic, post, status\n\nCourse: Day 22 lesson page",
         "height": 300,
         "width": 420,
         "color": 5
@@ -178,8 +178,13 @@
           "mode": "name"
         },
         "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now.toFormat('yyyy-MM-dd') }}",
+            "topic": "={{ $('Top 3').item.json.title }}",
+            "post": "={{ $('Write Post').item.json.text }}",
+            "status": "published"
+          },
           "matchingColumns": [],
           "schema": []
         },
