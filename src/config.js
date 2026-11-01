@@ -11,14 +11,15 @@ module.exports = {
 
   // ---------- BRAND ----------
   // Logo file public/img/ mein daalo (logo.svg / logo.png) aur path yahan likho.
-  logo: '/img/logo.svg',
-  showBrandText: true, // logo ke saath brand naam bhi dikhana hai?
-  favicon: '/img/favicon.svg',
+  logo: '/img/logo.png', // AdifySkills logo (header + footer)
+  logoFull: '/img/logo-full.png', // tagline wala logo (PDF watermark/certificate)
+  showBrandText: false, // logo ke saath brand naam bhi dikhana hai?
+  favicon: '/img/favicon.png',
   // Logo ke brand colors yahan daalo — poori website inhi colors se theme hogi
   brandColors: {
-    primary: '#ff6d5a',   // main brand color (buttons, highlights)
-    secondary: '#6a5cff', // second color (gradients)
-    accent: '#10b981',    // success / ticks
+    primary: '#4c1d95',   // main brand color (buttons, highlights)
+    secondary: '#0f8a4f', // second color (gradients)
+    accent: '#16a34a',    // success / ticks
   },
 
   // Batch details
@@ -89,8 +90,8 @@ module.exports = {
   },
 
   contact: {
-    phone: '+91 90000 00000',
-    whatsapp: '919000000000', // country code ke saath, bina + ke
+    phone: '+91 83838 91716',
+    whatsapp: '918383891716', // country code ke saath, bina + ke
     email: 'support@adifyskills.com',
     address: 'India (Online, Live)',
   },

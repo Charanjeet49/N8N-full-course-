@@ -21,7 +21,7 @@ const sec = (o) => B.sec(o);
 function heroFlow() {
   return `<svg class="hero-flow" viewBox="0 0 520 380" aria-hidden="true">
     <defs>
-      <linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#ff6d5a"/><stop offset="1" stop-color="#7c5cff"/></linearGradient>
+      <linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="${cfg.brandColors.primary}"/><stop offset="1" stop-color="${cfg.brandColors.secondary}"/></linearGradient>
       <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
     <path id="p1" class="wire" d="M95 190 C150 190 150 110 210 110"/>
