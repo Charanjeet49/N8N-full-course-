@@ -41,6 +41,7 @@ function renderLesson(n) {
           <p class="lead">“${esc(d.hook)}”</p>
           ${chips(d.tools)}
           ${n === 1 ? '<p class="d0-note">🧰 Pehli baar? Class se pehle <a href="/setup">Day 0 setup</a> kar lo — 20 minute.</p>' : ''}
+          <div class="vm-mini" role="group" aria-label="View mode"><span>View:</span><button type="button" data-set-mode="student">🎓 Student</button><button type="button" data-set-mode="mentor">👨‍🏫 Mentor</button><a href="/mentor" title="Yeh kya hai?">?</a></div>
           <div class="hero-cta"><a href="#todays-build" class="btn btn-primary magnetic">⚡ Aaj ka build (JSON)</a><a href="#build" class="btn btn-ghost">▶ Step-by-step</a><a href="#quiz" class="btn btn-ghost">🧠 Quiz</a><button class="btn btn-link" data-print>⬇ Notes PDF</button></div>
         </div>
         <div class="lh-ring reveal" style="--d:120ms"><div class="day-badge big"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring" style="--p:${n / cfg.totalDays}"/></svg><div><small>DAY</small><b>${pad(n)}</b><small>of ${cfg.totalDays}</small></div></div>

@@ -1117,3 +1117,27 @@ html:not(.mentor-mode) .mentor-only { display: none !important; }
 .gloss .gl-item b { color: var(--pri2); } .gloss .gl-item p { margin: 4px 0 0; font-size: 14px; color: var(--mut); }
 @media (max-width: 860px) { .pg { grid-template-columns: 1fr; } .pg-json { min-height: 200px; } }
 @media print { html .mentor-only { display: none !important; } .gl-tip { display: none; } }
+
+/* ===== V6 — Student / Mentor view switch ===== */
+.vm-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; margin-top: 26px; }
+.vm-switch button { font: inherit; text-align: left; display: grid; gap: 2px; padding: 18px 20px; border-radius: 18px; border: 2px solid var(--card-b); background: #fff; cursor: pointer; box-shadow: var(--sh-sm); transition: border-color .25s, transform .25s; }
+.vm-switch button:hover { transform: translateY(-2px); }
+.vm-switch button span { font-size: 28px; }
+.vm-switch button b { font-size: 17px; }
+.vm-switch button small { color: var(--mut); }
+.vm-switch button.on { border-color: var(--pri); background: color-mix(in srgb, var(--pri) 7%, #fff); }
+.vm-switch button[data-set-mode="mentor"].on { border-color: var(--pri2); background: color-mix(in srgb, var(--pri2) 8%, #fff); }
+.vm-status { margin-top: 14px; font-size: 15px; }
+.vm-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.vm-day { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #fff; border: 1px solid var(--card-b); }
+.vm-day a { color: var(--txt); text-decoration: none; font-weight: 600; font-size: 14px; }
+.vm-day a span { display: block; font-family: var(--mono); font-size: 12px; color: var(--pri); }
+.vm-day .mini-btn { white-space: nowrap; }
+.vm-mini { display: inline-flex; align-items: center; gap: 4px; margin: 16px 0 0; padding: 4px; border-radius: 99px; background: #fff; border: 1px solid var(--card-b); font-size: 13px; }
+.vm-mini span { padding: 0 8px; color: var(--mut); font-weight: 600; }
+.vm-mini button { font: inherit; font-weight: 700; border: 0; background: none; padding: 6px 12px; border-radius: 99px; cursor: pointer; color: var(--mut); }
+.vm-mini button.on { background: var(--pri); color: #fff; }
+.vm-mini button[data-set-mode="mentor"].on { background: var(--pri2); }
+.vm-mini a { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--mut); text-decoration: none; font-weight: 700; }
+.vm-mini + .hero-cta { margin-top: 18px; }
+@media (max-width: 600px) { .vm-switch { grid-template-columns: 1fr; } }

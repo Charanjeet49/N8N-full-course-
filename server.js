@@ -31,7 +31,7 @@ const loadSite = () => {
 };
 const PROD = process.env.NODE_ENV === 'production';
 let pages = loadSite();
-app.get(['/', '/index.html', '/nodes', '/docs', '/resources', '/setup', '/cheatsheets', '/day/:n'], (req, res, next) => {
+app.get(['/', '/index.html', '/nodes', '/docs', '/resources', '/setup', '/cheatsheets', '/mentor', '/day/:n'], (req, res, next) => {
   if (!PROD) pages = loadSite(); // dev: har request par fresh (content edit turant dikhe)
   const route = req.path === '/index.html' ? '/' : req.path.replace(/\/$/, '') || '/';
   const html = pages[route];

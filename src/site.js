@@ -9,8 +9,9 @@ const PAGES = () => {
   const { renderResources } = require('./pages/resources');
   const { renderSetup } = require('./pages/setup');
   const { renderCheatsheets } = require('./pages/cheatsheets');
+  const { renderMentor } = require('./pages/mentor');
   const { totalDays } = require('./config');
-  const map = { '/': render, '/nodes': renderNodes, '/docs': renderDocs, '/resources': renderResources, '/setup': renderSetup, '/cheatsheets': renderCheatsheets };
+  const map = { '/': render, '/nodes': renderNodes, '/docs': renderDocs, '/resources': renderResources, '/setup': renderSetup, '/cheatsheets': renderCheatsheets, '/mentor': renderMentor };
   for (let d = 1; d <= totalDays; d++) map[`/day/${d}`] = () => renderLesson(d);
   return map;
 };
