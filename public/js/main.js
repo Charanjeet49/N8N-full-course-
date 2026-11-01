@@ -375,13 +375,25 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   };
 
-  // ---------- Mentor mode ----------
-  $$('[data-mentor-toggle]').forEach((b) => b.addEventListener('click', () => {
-    const on = !document.documentElement.classList.contains('mentor-mode');
+  // ---------- Student / Mentor view ----------
+  const paintMode = () => {
+    const on = document.documentElement.classList.contains('mentor-mode');
+    $$('[data-set-mode]').forEach((b) => b.classList.toggle('on', (b.dataset.setMode === 'mentor') === on));
+    const st = $('[data-mode-status]');
+    if (st) st.innerHTML = on ? '✅ Abhi <b>Mentor view</b> chalu hai — lesson pages par teaching notes dikhenge.' : '✅ Abhi <b>Student view</b> chalu hai — bilkul wahi jo bachche dekhte hain.';
+  };
+  $$('[data-set-mode]').forEach((b) => b.addEventListener('click', () => {
+    const on = b.dataset.setMode === 'mentor';
     document.documentElement.classList.toggle('mentor-mode', on);
     try { on ? localStorage.setItem('mentor', '1') : localStorage.removeItem('mentor'); } catch {}
-    toast(on ? '👨‍🏫 Mentor mode ON — teaching notes dikh rahe hain' : 'Student view ✓');
+    paintMode();
+    toast(on ? '👨‍🏫 Mentor view ON — teaching notes dikh rahe hain' : '🎓 Student view ON');
   }));
+  $$('[data-copy-student]').forEach((b) => b.addEventListener('click', async () => {
+    const url = location.origin + b.dataset.copyStudent + '?mentor=0';
+    try { await navigator.clipboard.writeText(url); toast('📋 Student link copied: ' + url); } catch { toast(url); }
+  }));
+  paintMode();
 
   // ---------- Progress tracker ----------
   const done = () => lstore.get('n8n_done', []);
