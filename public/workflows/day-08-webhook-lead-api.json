@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Day 8: Website Form → Webhook Lead API\n\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Gmail (Google OAuth)\n- Sheet mein \"Website Leads\" tab banao\n- Production mein Webhook par Header Auth lagao (Authentication → Header Auth)\n\nCourse: Day 8 lesson page",
+        "content": "## Day 8: Website Form → Webhook Lead API\n\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Gmail (Google OAuth)\n- Sheet mein \"Website Leads\" tab banao (headers: name, email, phone, message, received_at)\n- Production mein Webhook par Header Auth lagao (Authentication → Header Auth)\n\nCourse: Day 8 lesson page",
         "height": 300,
         "width": 420,
         "color": 5
@@ -78,6 +78,53 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6151d4f4-0e91-48fb-a47e-152d0c0cda32",
+              "name": "name",
+              "value": "={{ $json.body.name.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "cfd8bd21-5a58-4bda-aa85-ec986dcc5625",
+              "name": "email",
+              "value": "={{ $json.body.email.trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "5535df8e-08f7-4573-a1ab-342a13145a43",
+              "name": "phone",
+              "value": "={{ $json.body.phone ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "17a01b36-b1fe-48fb-aece-f7bae7d6403c",
+              "name": "message",
+              "value": "={{ $json.body.message ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "5c84766a-8d0d-48b5-a0af-8718846fdf63",
+              "name": "received_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d138618e-ee3a-4a7f-a23d-5a5a3a391a52",
+      "name": "Pick Lead Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -102,8 +149,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        520,
-        200
+        780,
+        300
       ]
     },
     {
@@ -119,7 +166,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        780,
+        1040,
         300
       ]
     },
@@ -134,7 +181,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1040,
+        1300,
         300
       ],
       "webhookId": "f27f93f5-7c4b-4908-adf0-3bcd1eaf2d6f"
@@ -174,7 +221,7 @@
       "main": [
         [
           {
-            "node": "Save Lead",
+            "node": "Pick Lead Fields",
             "type": "main",
             "index": 0
           }
@@ -182,6 +229,17 @@
         [
           {
             "node": "Respond 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Lead Fields": {
+      "main": [
+        [
+          {
+            "node": "Save Lead",
             "type": "main",
             "index": 0
           }
