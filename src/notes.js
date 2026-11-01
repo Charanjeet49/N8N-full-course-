@@ -4,7 +4,6 @@
 // ============================================================
 const fs = require('fs');
 const path = require('path');
-const QR = require('qrcode');
 const cfg = require('./config');
 const { modules, days } = require('./curriculum');
 const LESSONS = { ...require('./lessons'), ...require('./lessons2') };
@@ -16,18 +15,13 @@ const { challenges, earn, glossary } = require('./student');
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
 const BASE = (cfg.publicUrl || new URL(cfg.siteUrl).origin).replace(/\/$/, '');
 const abs = (p) => (/^https?:/.test(p) ? p : BASE + p);
-const LOGO = (() => { try { return fs.readFileSync(path.join(__dirname, '..', 'public', cfg.logo), 'utf8'); } catch { return ''; } })();
+const LOGO = `<img src="${cfg.logo}" alt="${esc(cfg.brand)}">`;
+const LOGO_FULL = `<img src="${cfg.logoFull || cfg.logo}" alt="${esc(cfg.brand)}">`;
 const fmt = (min) => `${Math.floor(min / 60)}:${pad(min % 60)}`;
 const pdfName = (n, mentor) => `day-${pad(n)}-${mentor ? 'mentor' : 'notes'}.pdf`;
 
-// ---------- QR code (sync SVG) ----------
-function qr(text, size = 92) {
-  const { modules: m } = QR.create(text, { errorCorrectionLevel: 'M' });
-  const s = m.size; let d = '';
-  for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) if (m.data[y * s + x]) d += `M${x + 2} ${y + 2}h1v1h-1z`;
-  return `<svg class="qr" width="${size}" height="${size}" viewBox="0 0 ${s + 4} ${s + 4}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#14112b"/></svg>`;
-}
-const qrCard = (url, title, sub) => `<a class="qr-card" href="${esc(url)}">${qr(url)}<div><b>${esc(title)}</b><small>${esc(sub)}</small><code>${esc(url.replace(/^https?:\/\//, ''))}</code></div></a>`;
+// ---------- link card (clickable, no QR) ----------
+const linkCard = (url, icon, title, sub) => `<a class="lk-card" href="${esc(url)}"><span class="lk-i">${icon}</span><div><b>${esc(title)}</b><small>${esc(sub)}</small><code>${esc(url.replace(/^https?:\/\//, '').replace(/\?.*$/, ''))}</code></div><em>↗</em></a>`;
 
 // ---------- small building blocks ----------
 const h2 = (icon, title, sub = '', cls = '') => `<header class="nh ${cls}"><span class="nh-ic">${icon}</span><div><h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div></header>`;
@@ -71,7 +65,7 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
   // ---------- COVER ----------
   if (cover) {
     S.push(`<section class="cover" style="--c:${C}">
-      <div class="cv-top"><span class="cv-logo">${LOGO}</span><div><b>${esc(cfg.brand)}</b><small>${esc(cfg.courseName)}</small></div>${mentor ? '<span class="cv-badge">👨‍🏫 MENTOR COPY</span>' : '<span class="cv-badge">📘 CLASS NOTES</span>'}</div>
+      <div class="cv-top"><span class="cv-logo">${LOGO}</span><div><small>${esc(cfg.courseName)}</small><small>📞 ${esc(cfg.contact.phone)}</small></div>${mentor ? '<span class="cv-badge">👨‍🏫 MENTOR COPY</span>' : '<span class="cv-badge">📘 CLASS NOTES</span>'}</div>
       <div class="cv-mid">
         <span class="cv-mod">${m.icon} Module ${m.no} · ${esc(m.title)}</span>
         <div class="cv-day"><small>DAY</small><b>${pad(n)}</b><small>of ${cfg.totalDays}</small></div>
@@ -146,12 +140,12 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
     <h3 class="sh">📥 Workflow ko n8n mein kaise laayein</h3>
     <div class="imp">
       <ol class="imp-s">
-        <li><b>QR scan karo</b> ya link kholo — workflow ki JSON file khulegi.</li>
+        <li><b>Workflow JSON</b> wale button par click karo (ya lesson page par <b>📋 Copy workflow JSON</b> dabao).</li>
         <li>Poora text copy karo (<kbd>Ctrl</kbd>+<kbd>A</kbd>, <kbd>Ctrl</kbd>+<kbd>C</kbd>).</li>
         <li>n8n mein naya workflow kholo → canvas par click → <kbd>Ctrl</kbd>+<kbd>V</kbd>. Ya … menu → <i>Import from File</i>.</li>
         <li>Upar wala Setup checklist poora karo aur <b>Test</b> dabao.</li>
       </ol>
-      <div class="qr-col">${qrCard(jsonUrl, '⚡ Workflow JSON', `${TB.json.nodes.length - 1} nodes · ready to import`)}${qrCard(lessonUrl, '🌐 Lesson page', 'Copy buttons, quiz aur video links')}</div>
+      <div class="qr-col">${linkCard(jsonUrl, '⚡', 'Workflow JSON', `${TB.json.nodes.length - 1} nodes · ready to import`)}${linkCard(lessonUrl, '🌐', 'Lesson page', 'Copy buttons, quiz aur video links')}</div>
     </div>
   </section>`);
 
@@ -220,7 +214,7 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
     <div class="g2">
       <div><h3 class="sh">📚 Official docs</h3><ul class="links">${allDocs.map(([t, u]) => `<li><a href="${esc(u)}">${esc(t)} ↗</a></li>`).join('')}</ul>
       <h3 class="sh">▶ Videos</h3><ul class="links">${L.videos.map((q) => `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(q)}">${esc(q)} ↗</a></li>`).join('')}</ul></div>
-      <div class="qr-col">${qrCard(wa, '💬 Doubt poochho', 'WhatsApp par seedha message')}${qrCard(lessonUrl, '🌐 Day ' + n + ' lesson page', 'Quiz, copy buttons, videos')}</div>
+      <div class="qr-col">${linkCard(wa, '💬', 'Doubt poochho', `WhatsApp: ${cfg.contact.phone}`)}${linkCard(lessonUrl, '🌐', 'Day ' + n + ' lesson page', 'Quiz, copy buttons, videos')}<div class="call"><span>📞</span><div><b>${esc(cfg.contact.phone)}</b><small>Call / WhatsApp — ${esc(cfg.brand)}</small></div></div></div>
     </div>
   </section>`);
 
@@ -231,8 +225,8 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
 function certificate() {
   return `<section class="cert">
     <div class="ct-in">
-      <span class="cv-logo">${LOGO}</span>
-      <small>${esc(cfg.brand)} · ${esc(cfg.courseName)}</small>
+      <span class="ct-logo">${LOGO_FULL}</span>
+      <small>${esc(cfg.courseName)}</small>
       <h1>Certificate of Completion</h1>
       <p>Yeh certify kiya jaata hai ki</p>
       <div class="ct-name"></div>
@@ -250,8 +244,8 @@ function doc({ title, body, header }) {
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/notes.css">
-<style>@page { @top-left { content: "${header.replace(/"/g, '')}"; } }</style>
-</head><body>${body}</body></html>`;
+<style>@page { @top-left { content: "${header.replace(/"/g, '')}"; } @bottom-left { content: "📞 ${cfg.contact.phone} · ${cfg.brand} · Doubt? Call / WhatsApp karo"; } }</style>
+</head><body><div class="wm" aria-hidden="true">${LOGO_FULL}<span>📞 ${esc(cfg.contact.phone)}</span></div>${body}</body></html>`;
 }
 
 function renderNotes(n, { mentor = false } = {}) {
@@ -264,7 +258,7 @@ function renderBook() {
   const toc = `<section class="pg brk toc">${h2('📚', 'Course index — 25 din, ek jagah', 'Har din ka title aur module. Kisi bhi din par seedha jaane ke liye click karo.')}
     ${modules.map((m) => `<div class="toc-m" style="--c:${m.color}"><b>${m.icon} Module ${m.no} · ${esc(m.title)}</b><ol>${m.days.map((n) => { const d = days.find((x) => x.day === n); return `<li><a href="#day-${n}"><span>Day ${pad(n)}</span>${esc(d.title)}</a></li>`; }).join('')}</ol></div>`).join('')}</section>`;
   const cover = `<section class="cover book" style="--c:${cfg.brandColors.primary}">
-    <div class="cv-top"><span class="cv-logo">${LOGO}</span><div><b>${esc(cfg.brand)}</b><small>${esc(cfg.courseName)}</small></div><span class="cv-badge">📚 COMPLETE NOTES</span></div>
+    <div class="cv-top"><span class="cv-logo">${LOGO}</span><div><small>${esc(cfg.courseName)}</small><small>📞 ${esc(cfg.contact.phone)}</small></div><span class="cv-badge">📚 COMPLETE NOTES</span></div>
     <div class="cv-mid"><span class="cv-mod">${cfg.totalDays} din · ${cfg.totalDays * cfg.hoursPerClass} ghante · ${modules.length} modules</span><h1>${esc(cfg.courseName)}</h1><p class="cv-hook">“${esc(cfg.tagline)}”</p>
       <div class="cv-chips">${modules.map((m) => `<span>${m.icon} ${esc(m.title)}</span>`).join('')}</div></div>
     <div class="cv-bot"><div class="cv-fill"><span>Naam: <i></i></span><span>Batch: <i></i></span></div></div></section>`;
