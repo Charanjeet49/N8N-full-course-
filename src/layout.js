@@ -6,11 +6,11 @@ const { esc } = require('./kit');
 
 const NAV = [
   ['/#curriculum', 'Curriculum', 'home'],
+  ['/setup', 'Day 0 Setup', 'setup'],
   ['/day/1', 'Lessons', 'lesson'],
   ['/nodes', 'Nodes Library', 'nodes'],
   ['/docs', 'Docs Hub', 'docs'],
   ['/resources', 'Resources', 'resources'],
-  ['/#projects', 'Projects', 'home'],
   ['/#pricing', 'Pricing', 'home'],
   ['/#faq', 'FAQ', 'home'],
 ];
@@ -30,7 +30,7 @@ function siteFooter() {
   return `<footer class="site-foot"><div class="wrap">
     <div class="foot">
       <div>${logo()}<p>${esc(cfg.courseName)} — ${esc(cfg.tagline)}.</p></div>
-      <div><h4>Course</h4><a href="/#curriculum">Curriculum</a><a href="/day/1">Day-wise lessons</a><a href="/nodes">Nodes library</a><a href="/docs">Docs hub</a></div>
+      <div><h4>Course</h4><a href="/#curriculum">Curriculum</a><a href="/day/1">Day-wise lessons</a><a href="/nodes">Nodes library</a><a href="/docs">Docs hub</a><a href="/setup">Day 0 setup</a><a href="/resources">Workflows &amp; prompts</a><a href="/cheatsheets">Cheat sheets</a><button class="foot-link" data-mentor-toggle>👨‍🏫 Mentor mode</button></div>
       <div><h4>Contact</h4><a href="tel:${esc(cfg.contact.phone.replace(/\s/g, ''))}">📞 ${esc(cfg.contact.phone)}</a><a href="mailto:${esc(cfg.contact.email)}">✉️ ${esc(cfg.contact.email)}</a><a href="https://wa.me/${esc(cfg.contact.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a></div>
       <div><h4>Enroll</h4><a href="/#pricing">Plans &amp; pricing</a><a href="/#enroll">Reserve seat</a><a href="/#faq">FAQ</a></div>
     </div>
@@ -52,6 +52,7 @@ function layout({ title, desc, body, total, drawerHtml, active = 'home', schema 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
+<script>try{var q=new URLSearchParams(location.search).get("mentor");if(q==="1")localStorage.setItem("mentor","1");if(q==="0")localStorage.removeItem("mentor");if(localStorage.getItem("mentor")==="1")document.documentElement.classList.add("mentor-mode")}catch(e){}</script>
 ${brandStyle()}
 ${schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script>` : ''}
 </head>
@@ -71,7 +72,7 @@ ${schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script
   </div>
 </header>
 <aside class="drawer" id="drawer" aria-hidden="true"><div class="dr-in"><div class="dr-h"><b>Is page par · ${total} ${label}</b><button id="closeIndex" aria-label="Close">✕</button></div>
-  <div class="dr-body"><div class="dr-g dr-pages"><h5>Pages</h5><a href="/"><span>🏠</span>Home / Brochure</a><a href="/day/1"><span>📘</span>Day-wise lessons (25)</a><a href="/nodes"><span>🧩</span>Nodes library (100)</a><a href="/docs"><span>📚</span>n8n Docs hub</a></div>${drawerHtml}</div></div></aside>
+  <div class="dr-body"><div class="dr-g dr-pages"><h5>Pages</h5><a href="/"><span>🏠</span>Home / Brochure</a><a href="/day/1"><span>📘</span>Day-wise lessons (25)</a><a href="/nodes"><span>🧩</span>Nodes library (100)</a><a href="/docs"><span>📚</span>n8n Docs hub</a><a href="/setup"><span>🧰</span>Day 0 setup</a><a href="/resources"><span>📦</span>Workflows & prompts</a><a href="/cheatsheets"><span>📝</span>Cheat sheets + playground</a></div>${drawerHtml}</div></div></aside>
 <div class="sec-indicator" id="secIndicator"><b>01</b>/<span>${total}</span></div>
 <main>
 ${body}
@@ -80,6 +81,8 @@ ${footer ? siteFooter() : ''}
 <a class="wa-float" href="https://wa.me/${esc(cfg.contact.whatsapp)}?text=${encodeURIComponent('Hi, mujhe n8n course ke baare mein jaankari chahiye')}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
 <button class="to-top" id="toTop" aria-label="Back to top">↑</button>
 <div class="toast" id="toast"></div>
+<button class="mentor-pill mentor-only" data-mentor-toggle title="Mentor mode band karo">👨‍🏫 Mentor mode ON ✕</button>
+<script type="application/json" id="glossaryData">${JSON.stringify(require('./student').glossary).replace(/</g, '\\u003c')}</script>
 <script>window.__WA__=${JSON.stringify(cfg.contact.whatsapp)};${extraScript}</script>
 <script src="/js/main.js" defer></script>
 </body>

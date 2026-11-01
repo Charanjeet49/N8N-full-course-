@@ -179,7 +179,7 @@ function build() {
   // LESSON LIBRARY
   S.push(sec({
     id: 'lessons', title: '25 in-depth lesson pages', eyebrow: 'Day-wise teaching guide', group: 'Learning hub',
-    sub: 'Har din ka alag page: concepts + analogies, animated workflow diagram, step-by-step build, example JSON, mistakes, quiz, teacher script, videos aur docs.',
+    sub: 'Har din ka alag page: concepts + analogies, animated workflow diagram, step-by-step build, example JSON, ready workflow, challenge, quiz, videos aur docs.',
     body: `<div class="lesson-grid">${days.map((d, i) => `<a href="/day/${d.day}" class="card lcard reveal" style="--c:${modById[d.module].color};--d:${(i % 5) * 50}ms"><span class="lc-day">Day ${pad(d.day)}</span><h3>${esc(d.title)}</h3><small>Module ${modById[d.module].no} · ${d.tools.slice(0, 3).map(esc).join(' · ')}</small><i>Open lesson →</i></a>`).join('')}</div>`,
   }));
 
@@ -213,8 +213,8 @@ function build() {
 
   // TEACHER GUIDE
   S.push(sec({
-    id: 'teach-with-site', title: 'Is website se class kaise padhayein', eyebrow: 'Instructor guide', group: 'Learning hub',
-    body: `<div class="steps-h">${[['📘', 'Lesson kholo', '/day/N par us din ka page — concepts aur analogies se shuru karo'], ['🧩', 'n8n saath mein', 'Doosre tab mein n8n kholo, "Step-by-step build" follow karo'], ['🧠', 'Quiz + practice', 'Class ke end mein quiz, practice ladder homework mein do'], ['📚', 'Docs & nodes', 'Doubt par Nodes Library ya Docs Hub ka link chat mein bhejo']].map(([i, t, d], k) => `<div class="step reveal" style="--d:${k * 90}ms"><div class="ic">${i}</div><b>${pad(k + 1)}</b><h3>${t}</h3><p>${d}</p></div>`).join('')}</div>`,
+    id: 'teach-with-site', title: 'Is website se kaise seekhein', eyebrow: 'Kaise use karein', group: 'Learning hub',
+    body: `<div class="steps-h">${[['🧰', 'Day 0 setup', 'Class se pehle <a href="/setup">setup page</a> par accounts ready kar lo — 30 minute ka kaam'], ['📘', 'Har din ka page', '/day/N par kahani, examples aur ready workflow — class se pehle 10 minute dekh lo'], ['🧩', 'Saath-saath banao', 'Doosre tab mein n8n kholo; atke to "Today\'s build" se JSON copy karke aage badho'], ['✅', 'Tick + challenge', 'Din ke end mein challenge try karo aur "Day complete" tick karo — progress save hota hai']].map(([i, t, d], k) => `<div class="step reveal" style="--d:${k * 90}ms"><div class="ic">${i}</div><b>${pad(k + 1)}</b><h3>${t}</h3><p>${d}</p></div>`).join('')}</div>`,
   }));
 
   // 16-23 MODULES
