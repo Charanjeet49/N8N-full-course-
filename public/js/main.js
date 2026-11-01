@@ -108,6 +108,30 @@
     setTimeout(() => print(), 200);
   }));
 
+  // ---------- Workflow JSON copy (embedded / by URL) + prompt search ----------
+  $$('[data-copy-el]').forEach((b) => b.addEventListener('click', async () => {
+    const el = document.getElementById(b.dataset.copyEl);
+    try { await navigator.clipboard.writeText(el.textContent); toast('📋 Workflow copied! n8n canvas par Ctrl+V karo'); } catch { toast('Copy nahi hua — .json download karo'); }
+  }));
+  $$('[data-copy-url]').forEach((b) => b.addEventListener('click', async () => {
+    const url = b.dataset.copyUrl;
+    try {
+      if (window.ClipboardItem && navigator.clipboard.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': fetch(url).then((r) => r.text()).then((t) => new Blob([t], { type: 'text/plain' })) })]);
+      } else { await navigator.clipboard.writeText(await (await fetch(url)).text()); }
+      toast('📋 Workflow copied! n8n canvas par Ctrl+V karo');
+    } catch { toast('Copy nahi hua — .json download karo'); }
+  }));
+  const ps = $('#promptSearch');
+  if (ps) ps.addEventListener('input', () => {
+    const q = ps.value.trim().toLowerCase();
+    $$('[data-pl]').forEach((d) => {
+      let any = false;
+      d.querySelectorAll('.prompt-card').forEach((c) => { const ok = !q || c.textContent.toLowerCase().includes(q) || d.querySelector('summary').textContent.toLowerCase().includes(q); c.style.display = ok ? '' : 'none'; any = any || ok; });
+      d.style.display = any ? '' : 'none'; d.open = !!q && any;
+    });
+  });
+
   // ---------- Agenda explain: open/close all ----------
   $$('[data-ag-all]').forEach((b) => b.addEventListener('click', () => {
     const box = b.closest('.panel') || document;

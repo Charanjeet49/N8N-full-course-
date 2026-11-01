@@ -1,0 +1,247 @@
+{
+  "name": "Day 13 — Payment Webhook → GST Invoice → Email + Finance Sheet",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 13: Payment Webhook → GST Invoice → Email + Finance Sheet\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: Google Sheets (Google OAuth)\n- Razorpay Dashboard → Settings → Webhooks → URL = production webhook URL, event = payment.captured\n- Production mein webhook signature (X-Razorpay-Signature) verify karna mat bhoolna\n- \"Payments\" tab headers: payment_id, email, phone, total, taxable, gst, invoice_no, date\n\nCourse: Day 13 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "a5833e61-e818-4862-ac42-ce98955465f4",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "razorpay",
+        "options": {}
+      },
+      "id": "2584cc2a-3861-4e0a-a630-df845c7dd8eb",
+      "name": "Razorpay Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "a29383df-d436-41e0-a4a7-11b2000ed7ec"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "80cd14bb-7c69-4d44-a5f5-264217699609",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "payment.captured",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e2503082-32da-4162-ad27-6595b4ac84b3",
+      "name": "Captured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e19fad6-2fc0-4e2c-aec9-218b748ee770",
+              "name": "payment_id",
+              "value": "={{ $json.body.payload.payment.entity.id }}",
+              "type": "string"
+            },
+            {
+              "id": "147ffcb8-4d35-4e33-ac60-7101e73525b4",
+              "name": "email",
+              "value": "={{ $json.body.payload.payment.entity.email }}",
+              "type": "string"
+            },
+            {
+              "id": "143cebeb-343f-4446-a635-4a0e6ed55c60",
+              "name": "phone",
+              "value": "={{ $json.body.payload.payment.entity.contact }}",
+              "type": "string"
+            },
+            {
+              "id": "d6f911ab-923d-4fe9-aedb-197af3100d69",
+              "name": "total",
+              "value": "={{ $json.body.payload.payment.entity.amount / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "d70918cc-5a05-4758-a36c-e1e5ee1deddc",
+              "name": "taxable",
+              "value": "={{ Math.round(($json.body.payload.payment.entity.amount / 100) / 1.18 * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "fb36db12-f0c6-4b05-a9af-390b09724d84",
+              "name": "invoice_no",
+              "value": "={{ 'INV-' + $now.toFormat('yyyyMMdd-HHmmss') }}",
+              "type": "string"
+            },
+            {
+              "id": "022c8c57-7629-4674-af44-7cd783f5117b",
+              "name": "date",
+              "value": "={{ $now.toFormat('dd LLL yyyy') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6e941b67-922a-4ecc-a90d-69b689a00549",
+      "name": "Invoice Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json: j }) => {\n  const gst = Math.round((j.total - j.taxable) * 100) / 100;\n  const html = '<div style=\"font-family:Arial;max-width:560px\"><h2>Tax Invoice ' + j.invoice_no + '</h2><p>Date: ' + j.date + '<br>Payment: ' + j.payment_id + '</p>' +\n    '<table width=\"100%\" cellpadding=\"8\" style=\"border-collapse:collapse\" border=\"1\">' +\n    '<tr><td>Taxable value</td><td align=\"right\">₹' + j.taxable + '</td></tr>' +\n    '<tr><td>CGST 9%</td><td align=\"right\">₹' + (gst / 2).toFixed(2) + '</td></tr>' +\n    '<tr><td>SGST 9%</td><td align=\"right\">₹' + (gst / 2).toFixed(2) + '</td></tr>' +\n    '<tr><td><b>Total</b></td><td align=\"right\"><b>₹' + j.total + '</b></td></tr></table><p>Thank you for your purchase!</p></div>';\n  return { json: { ...j, gst, html } };\n});"
+      },
+      "id": "160d0e44-213c-4acc-a16a-368b9a71d2ff",
+      "name": "HTML Invoice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Your invoice {{ $json.invoice_no }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "a1032f13-7602-4dc9-ad5f-f4a395d130f5",
+      "name": "Email Invoice",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "cd4a5db6-27ef-4365-a640-e30923539a64",
+      "name": "Finance Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Razorpay Webhook": {
+      "main": [
+        [
+          {
+            "node": "Captured?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Captured?": {
+      "main": [
+        [
+          {
+            "node": "Invoice Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Fields": {
+      "main": [
+        [
+          {
+            "node": "HTML Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Invoice": {
+      "main": [
+        [
+          {
+            "node": "Email Invoice",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Finance Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

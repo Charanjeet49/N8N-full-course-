@@ -1,0 +1,221 @@
+{
+  "name": "Day 08 — Website Form → Webhook Lead API",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 8: Website Form → Webhook Lead API\n\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Gmail (Google OAuth)\n- Sheet mein \"Website Leads\" tab banao\n- Production mein Webhook par Header Auth lagao (Authentication → Header Auth)\n\nCourse: Day 8 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "68d6e286-6c37-499f-a852-fa2d35c7a7c7",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "64b8bb47-1a79-43b7-a1d5-f68b2f4de739",
+      "name": "POST /lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "f730e131-3724-48de-a750-61738460360e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "250cba53-f0de-4ba3-a6ed-c3128948cfed",
+              "leftValue": "={{ $json.body.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "65d555f2-02e9-4002-a6e1-80f53e23ac13",
+              "leftValue": "={{ ($json.body.email || \"\").isEmail() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ca949d1f-9c60-4236-a722-2a4a99bd57e4",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Website Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "5c20306c-cec4-46da-a3eb-bcd4434b9fe6",
+      "name": "Save Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('POST /lead').item.json.body.email }}",
+        "subject": "Thanks! Humein aapki request mil gayi ✅",
+        "emailType": "text",
+        "message": "=Hi {{ $('POST /lead').item.json.body.name }},\n\nHumari team 24 ghante mein aapse contact karegi.\n\nRegards",
+        "options": {}
+      },
+      "id": "dd005a53-a155-4abc-a253-16c34183222f",
+      "name": "Auto Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"message\": \"Lead saved\" }",
+        "options": {}
+      },
+      "id": "921d3ebc-08be-46ac-a124-ca2a0bc0e4e3",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        300
+      ],
+      "webhookId": "f27f93f5-7c4b-4908-adf0-3bcd1eaf2d6f"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": false, \"error\": \"name aur valid email zaroori hai\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "3eaa85be-b7c2-484f-a618-27bd75117d54",
+      "name": "Respond 400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        400
+      ],
+      "webhookId": "4f86cf37-ebdc-4450-a3af-47dd37180da1"
+    }
+  ],
+  "connections": {
+    "POST /lead": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Save Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead": {
+      "main": [
+        [
+          {
+            "node": "Auto Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Reply": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

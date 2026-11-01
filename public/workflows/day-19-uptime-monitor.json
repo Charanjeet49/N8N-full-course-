@@ -1,0 +1,154 @@
+{
+  "name": "Day 19 — Self-Hosted n8n + Uptime Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 19: Self-Hosted n8n + Uptime Monitor\n\n\n**Setup:**\n- Connect: Telegram bot token (BotFather se)\n- URL mein apna domain daalo\n- Best practice: yeh monitor kisi DOOSRE n8n / server par chalao (same server down hua to alert kaun bhejega?)\n\nCourse: Day 19 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "8de2cf89-fe25-433c-a527-05d3d00e2ed2",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "190ead35-336d-4d49-ae40-89d336737439",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://n8n.yourdomain.com/healthz",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c7b3dc62-0588-43db-a328-9f7a67861a94",
+      "name": "Ping n8n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb1da67f-71cf-4392-ac2a-e8a698fdad38",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2ab46724-31cc-4325-a967-034b3d7022a4",
+      "name": "Down?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🔴 n8n DOWN!\nStatus: {{ $json.statusCode || 'no response' }}\nTime: {{ $now.toFormat('HH:mm') }}",
+        "additionalFields": {}
+      },
+      "id": "4b7738b6-aaf1-4167-a2db-4f61b027c55a",
+      "name": "Down Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Ping n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping n8n": {
+      "main": [
+        [
+          {
+            "node": "Down?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Down?": {
+      "main": [
+        [
+          {
+            "node": "Down Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

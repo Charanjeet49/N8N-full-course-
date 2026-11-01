@@ -1,5 +1,5 @@
 // ============================================================
-//  LESSON PAGE — /day/:n  (har din ~19 sections, poora teaching guide)
+//  LESSON PAGE — /day/:n  (har din ~20 sections, poora teaching guide)
 // ============================================================
 const cfg = require('../config');
 const { modules, days } = require('../curriculum');
@@ -8,6 +8,8 @@ const { nodes } = require('../nodes');
 const { layout } = require('../layout');
 const { esc, pad, makeBuilder, chips, yt, flowDiagram, iconFor } = require('../kit');
 const { agendaHtml, EXAMPLES } = require('../explain');
+const { builds } = require('../buildlib');
+const { buildBlock } = require('../buildview');
 
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
 const nodeByName = Object.fromEntries(nodes.map((n) => [n.name.toLowerCase(), n]));
@@ -37,7 +39,7 @@ function renderLesson(n) {
           <h1 class="lh-title"><span class="lh-day">Day ${pad(n)}</span>${esc(d.title)}</h1>
           <p class="lead">“${esc(d.hook)}”</p>
           ${chips(d.tools)}
-          <div class="hero-cta"><a href="#build" class="btn btn-primary magnetic">▶ Step-by-step build</a><a href="#quiz" class="btn btn-ghost">🧠 Quiz</a><button class="btn btn-link" data-print>⬇ Notes PDF</button></div>
+          <div class="hero-cta"><a href="#todays-build" class="btn btn-primary magnetic">⚡ Aaj ka build (JSON)</a><a href="#build" class="btn btn-ghost">▶ Step-by-step</a><a href="#quiz" class="btn btn-ghost">🧠 Quiz</a><button class="btn btn-link" data-print>⬇ Notes PDF</button></div>
         </div>
         <div class="lh-ring reveal" style="--d:120ms"><div class="day-badge big"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring" style="--p:${n / cfg.totalDays}"/></svg><div><small>DAY</small><b>${pad(n)}</b><small>of ${cfg.totalDays}</small></div></div>
           <p>${Math.round((n / cfg.totalDays) * 100)}% course complete</p></div>
@@ -47,6 +49,10 @@ function renderLesson(n) {
 
   // 2 WHY
   S.push(B.sec({ id: 'why', group: G, eyebrow: 'Kyun zaroori hai', title: 'Aaj ka lesson kyun matter karta hai?', body: `<div class="why-box reveal"><span>💡</span><p>${esc(L.why)}</p></div>` }));
+
+  // 2b TODAY'S BUILD
+  const TB = builds()[n];
+  S.push(B.sec({ id: 'todays-build', group: G, eyebrow: "Today's build", title: `Aaj hum yeh automation banayenge`, sub: 'Ready n8n workflow: copy karo → n8n canvas par paste karo → accounts connect karo → chalao. Students ko bhi yahi do.', body: `${buildBlock(TB, m.color)}${TB.prompts.length ? `<h4 class="tb-ph">💬 Is build ke prompts</h4><div class="grid g2 tb-prompts">${require('../buildview').promptCards(TB)}</div>` : ''}<p class="hint reveal">📦 Saare 25 workflows ek saath: <a href="/resources">Resources page →</a></p>` }));
 
   // 3 OBJECTIVES (+ topic example cards)
   S.push(B.sec({ id: 'objectives', group: G, eyebrow: 'Learning objectives', title: 'Class ke end tak student kya kar payega', sub: 'Har topic par click karo — ek real-life example aur ek n8n example.', body: `<ul class="obj obj-x">${d.topics.map((t, i) => { const [life, n8n] = E.topics[i] || []; return `<li class="reveal" style="--d:${i * 60}ms"><details><summary><b>${pad(i + 1)}</b><span>${esc(t)}</span><i class="ox-plus">+</i></summary>${life ? `<div class="ox"><p><span>🌍 Real life</span>${esc(life)}</p><p><span>⚙️ n8n mein</span>${esc(n8n)}</p></div>` : ''}</details></li>`; }).join('')}</ul>` }));
@@ -115,4 +121,4 @@ function renderLesson(n) {
   });
 }
 
-module.exports = { renderLesson, lessonSectionCount: () => 19 };
+module.exports = { renderLesson, lessonSectionCount: () => 20 };

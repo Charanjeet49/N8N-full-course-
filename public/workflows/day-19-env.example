@@ -1,0 +1,6 @@
+# .env naam se save karo (docker-compose.yml ke saath)
+N8N_HOST=n8n.yourdomain.com
+POSTGRES_USER=n8n
+POSTGRES_PASSWORD=change-this-long-password
+# Ek baar banao aur SAFE rakho (openssl rand -hex 32). Kho gaya to saare credentials bekaar!
+N8N_ENCRYPTION_KEY=paste-a-long-random-string

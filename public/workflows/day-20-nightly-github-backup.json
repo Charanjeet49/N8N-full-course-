@@ -1,0 +1,133 @@
+{
+  "name": "Day 20 — Nightly Workflow Backup → GitHub",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 20: Nightly Workflow Backup → GitHub\n\n\n**Setup:**\n- Connect: n8n API key (Settings → n8n API)\n- Connect: GitHub (personal access token)\n- GitHub par private repo \"n8n-backups\" banao\n- n8n Settings → n8n API → API key banao; credential mein Base URL = https://your-n8n-domain/api/v1\n- GitHub token mein \"Contents: read & write\" permission do\n\nCourse: Day 20 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "82050e14-c893-4e03-a962-3b0e7939ce7b",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "id": "1aa84837-cf53-4989-a1f3-7bcd9a4a7aa4",
+      "name": "Every Night 2 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "900f3f86-e482-4a22-a2de-c20fe453f15e",
+      "name": "Get All Workflows",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const day = new Date().toISOString().slice(0, 10);\nreturn $input.all().map(({ json: wf }) => {\n  const safe = wf.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();\n  return { json: {\n    path: 'backups/' + day + '/' + safe + '-' + wf.id + '.json',\n    content: JSON.stringify(wf, null, 2),\n    message: 'Backup ' + wf.name + ' (' + day + ')'\n  } };\n});"
+      },
+      "id": "a2ec4971-1979-4c1c-a5e5-1643d73e3515",
+      "name": "Prepare Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "create",
+        "owner": "YOUR_GITHUB_USERNAME",
+        "repository": "n8n-backups",
+        "filePath": "={{ $json.path }}",
+        "fileContent": "={{ $json.content }}",
+        "commitMessage": "={{ $json.message }}"
+      },
+      "id": "b706a3c0-99fd-4e66-ab24-59e81d787387",
+      "name": "Commit to GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        780,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    }
+  ],
+  "connections": {
+    "Every Night 2 AM": {
+      "main": [
+        [
+          {
+            "node": "Get All Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Workflows": {
+      "main": [
+        [
+          {
+            "node": "Prepare Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Files": {
+      "main": [
+        [
+          {
+            "node": "Commit to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

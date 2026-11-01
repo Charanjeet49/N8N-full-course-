@@ -1,0 +1,277 @@
+{
+  "name": "Day 14 — Inbox AI: Classify + Sentiment + Reply Draft",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 14: Inbox AI: Classify + Sentiment + Reply Draft\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Telegram bot token (BotFather se)\n- Pehle ek test Gmail account par chalao\n\nCourse: Day 14 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "75a035cd-7d35-4f88-a513-2d69afac0038",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": true,
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ]
+        }
+      },
+      "id": "ad8698ac-f794-4d42-a6ef-edc944c99556",
+      "name": "New Email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "inputText": "=Subject: {{ $json.Subject }}\n\n{{ $json.snippet }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "sales",
+              "description": "Price, quote, demo, new project ya service ke baare mein poochna"
+            },
+            {
+              "category": "support",
+              "description": "Existing customer ki problem, bug, refund, order issue"
+            },
+            {
+              "category": "spam",
+              "description": "Promotions, newsletters, cold SEO offers, irrelevant"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "94494d6d-861b-423d-a94a-f672f0116f01",
+      "name": "Classify Email",
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "324f0f7b-002c-4d01-a58b-72aeed53e377",
+      "name": "Classifier Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tum ek helpful sales assistant ho jo ek Indian automation agency ke liye kaam karta hai.\nNeeche diye email ko padho aur:\n1. sentiment batao (positive / neutral / negative)\n2. 3 line ka polite reply draft karo — simple English, koi fake promise nahi, end mein 15-min call ka offer.\n\nFrom: {{ $('New Email').item.json.From }}\nSubject: {{ $('New Email').item.json.Subject }}\nEmail: {{ $('New Email').item.json.snippet }}",
+        "hasOutputParser": true
+      },
+      "id": "aa9ce39b-27db-4975-a559-c09c92dc099d",
+      "name": "Draft Sales Reply",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        520,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "ac569d48-6f76-4db6-a675-65ffdad2d694",
+      "name": "Reply Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"sentiment\": \"positive\", \"reply\": \"Hi ...\" }"
+      },
+      "id": "d802d651-5f99-4428-a4a2-9a926b88f46a",
+      "name": "Reply JSON",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        570,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $('New Email').item.json.Subject }}",
+        "emailType": "text",
+        "message": "={{ $json.output.reply }}",
+        "options": {
+          "sendTo": "={{ $('New Email').item.json.From }}"
+        }
+      },
+      "id": "02b3f087-bc0c-4493-afc3-003f8b8867f8",
+      "name": "Create Gmail Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_SUPPORT_CHAT_ID",
+        "text": "=🛟 Support email: {{ $json.Subject }}\nFrom: {{ $json.From }}\n{{ $json.snippet }}",
+        "additionalFields": {}
+      },
+      "id": "6888cee1-a3cc-49e9-a77f-e177a1c042fc",
+      "name": "Alert Support Team",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $json.id }}"
+      },
+      "id": "494ebdd2-4c7e-4d80-a441-899342d26782",
+      "name": "Mark Spam Read",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "New Email": {
+      "main": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classifier Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Email": {
+      "main": [
+        [
+          {
+            "node": "Draft Sales Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Support Team",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Spam Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Draft Sales Reply",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply JSON": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Draft Sales Reply",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Sales Reply": {
+      "main": [
+        [
+          {
+            "node": "Create Gmail Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

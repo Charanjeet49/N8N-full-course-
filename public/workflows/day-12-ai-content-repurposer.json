@@ -1,0 +1,246 @@
+{
+  "name": "Day 12 — AI Content Repurposing Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 12: AI Content Repurposing Engine\n\n\n**Setup:**\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- RSS URL ko apne blog ke feed se badlo\n- \"Content Queue\" tab headers: title, link, linkedin, x_thread, instagram, newsletter, whatsapp, status\n\nCourse: Day 12 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "ad5cf3c9-3301-4b06-a9c1-479552a2bdb9",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "feedUrl": "https://blog.n8n.io/rss/"
+      },
+      "id": "6fd10346-3da1-41b9-a1a3-8108d1443f5d",
+      "name": "New Blog Post",
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tum ek senior social media writer ho. Neeche diye blog post ko 5 formats mein badlo. Tone: friendly, simple Hinglish, emojis kam.\n\nTitle: {{ $json.title }}\nSummary: {{ $json.contentSnippet }}\nLink: {{ $json.link }}\n\nRules:\n- linkedin: 120-180 words, hook line se shuru, 3 bullet takeaways, end mein sawaal\n- x_thread: 4 tweets ka array, har tweet 260 characters se kam\n- instagram: caption + 8 hashtags\n- newsletter: 80 words ka para + CTA\n- whatsapp: 2 line + link",
+        "hasOutputParser": true
+      },
+      "id": "412042e2-499e-4276-aa32-0aae9b4dd3cf",
+      "name": "Repurpose with AI",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "15e7fec6-15f0-42e8-a73e-5b65d9699b45",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"linkedin\": \"...\",\n  \"x_thread\": [\"tweet 1\", \"tweet 2\", \"tweet 3\", \"tweet 4\"],\n  \"instagram\": \"...\",\n  \"newsletter\": \"...\",\n  \"whatsapp\": \"...\"\n}"
+      },
+      "id": "633d90bf-87a1-4d55-af47-4eb420a3f775",
+      "name": "JSON Format",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        310,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "465906af-67ce-4f01-aa5b-9254f32198f9",
+              "name": "title",
+              "value": "={{ $('New Blog Post').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "23d22af2-c9dc-4e14-a647-e38524252b1f",
+              "name": "link",
+              "value": "={{ $('New Blog Post').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "e1be6a50-4a18-482d-a496-f8281ca264f0",
+              "name": "linkedin",
+              "value": "={{ $json.output.linkedin }}",
+              "type": "string"
+            },
+            {
+              "id": "e814a0cc-fcd1-4ad4-aec8-7eff69b3b269",
+              "name": "x_thread",
+              "value": "={{ $json.output.x_thread.join('\\n\\n') }}",
+              "type": "string"
+            },
+            {
+              "id": "7e368562-bca0-4f17-aa7b-0e7416a95758",
+              "name": "instagram",
+              "value": "={{ $json.output.instagram }}",
+              "type": "string"
+            },
+            {
+              "id": "fb77b37e-b6ad-464b-a6ca-ed55a704a3b2",
+              "name": "newsletter",
+              "value": "={{ $json.output.newsletter }}",
+              "type": "string"
+            },
+            {
+              "id": "2d35748b-c17f-4fc5-ae4a-a4e2f3670fb1",
+              "name": "whatsapp",
+              "value": "={{ $json.output.whatsapp }}",
+              "type": "string"
+            },
+            {
+              "id": "0a58e186-838b-4b0d-a602-b0f96a715136",
+              "name": "status",
+              "value": "pending approval",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab4aa827-16c7-45a7-a8ab-97b37a1a7c69",
+      "name": "Queue Row",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Content Queue",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "184d9dd7-88d1-439c-af51-e82663419e8d",
+      "name": "Content Queue",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "New Blog Post": {
+      "main": [
+        [
+          {
+            "node": "Repurpose with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Repurpose with AI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Format": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Repurpose with AI",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repurpose with AI": {
+      "main": [
+        [
+          {
+            "node": "Queue Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Queue Row": {
+      "main": [
+        [
+          {
+            "node": "Content Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

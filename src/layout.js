@@ -9,6 +9,7 @@ const NAV = [
   ['/day/1', 'Lessons', 'lesson'],
   ['/nodes', 'Nodes Library', 'nodes'],
   ['/docs', 'Docs Hub', 'docs'],
+  ['/resources', 'Resources', 'resources'],
   ['/#projects', 'Projects', 'home'],
   ['/#pricing', 'Pricing', 'home'],
   ['/#faq', 'FAQ', 'home'],

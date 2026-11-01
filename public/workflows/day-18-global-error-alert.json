@@ -1,0 +1,163 @@
+{
+  "name": "Day 18 — Global Error Workflow → Telegram + Log",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 18: Global Error Workflow → Telegram + Log\n\n\n**Setup:**\n- Connect: Telegram bot token (BotFather se)\n- Connect: Google Sheets (Google OAuth)\n- Is workflow ko save karo (Active karne ki zaroorat nahi)\n- Har doosre workflow mein: Settings → Error Workflow → \"Day 18 — Global Error Workflow\" chuno\n- \"Errors\" tab headers: workflow, node, error, url, time\n\nCourse: Day 18 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "72685195-51b3-4588-a30d-b7908885777d",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "9a902cd8-ccbb-45f1-af12-271a2676c6c8",
+      "name": "On Any Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "726ac7ad-61ed-4bb9-a54d-25ee7230cf15",
+              "name": "workflow",
+              "value": "={{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "54b60211-7301-4265-a05d-09911bfadd65",
+              "name": "node",
+              "value": "={{ $json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "f803977c-f87f-441a-afcb-a50186dae020",
+              "name": "error",
+              "value": "={{ $json.execution.error.message }}",
+              "type": "string"
+            },
+            {
+              "id": "ec6de320-8d06-44bf-a9f6-bd108cddd9ae",
+              "name": "url",
+              "value": "={{ $json.execution.url }}",
+              "type": "string"
+            },
+            {
+              "id": "957ab8a9-ce9f-4471-a755-881b7ddea1ad",
+              "name": "time",
+              "value": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b252f8e-a530-473d-a9ae-5259a6d47e08",
+      "name": "Error Details",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚨 Workflow failed!\n\n📦 {{ $json.workflow }}\n🧩 Node: {{ $json.node }}\n❌ {{ $json.error }}\n🕒 {{ $json.time }}\n🔗 {{ $json.url }}",
+        "additionalFields": {}
+      },
+      "id": "e9e48d0e-9548-4320-ab0c-ea713c357f57",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        200
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Errors",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "a6bf5235-acf0-4f9c-a057-d49b5ca139c9",
+      "name": "Error Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "On Any Error": {
+      "main": [
+        [
+          {
+            "node": "Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Details": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

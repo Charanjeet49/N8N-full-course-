@@ -1,0 +1,476 @@
+{
+  "name": "Day 21 — AI Customer Support Desk (Chat + Email → Agent → Ticket)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 21: AI Customer Support Desk (Chat + Email → Agent → Ticket)\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- Connect: Slack (OAuth / bot token)\n- Day 16 wala \"Docs Search Tool\" (vector store) copy karke is agent mein ai_tool ki tarah jodo\n- \"Tickets\" tab headers: channel, user, text, output\n- Slack mein #support channel\n\nCourse: Day 21 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "093bbea0-cd48-4337-a626-bf846c6aa250",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "title": "Support 💬"
+        }
+      },
+      "id": "b5252c98-7cb4-434b-a3b5-b51979189700",
+      "name": "Website Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "e20ee963-2126-44ce-aae5-bc1333a23538"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": true,
+        "filters": {
+          "q": "to:support@yourcompany.com"
+        }
+      },
+      "id": "d488072f-b064-42cf-a450-1904c155c741",
+      "name": "Support Email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dc4d5c00-e8f8-4513-a634-6dc27593c397",
+              "name": "channel",
+              "value": "chat",
+              "type": "string"
+            },
+            {
+              "id": "208a70b5-f1fa-4077-aca2-da9be698c090",
+              "name": "user",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "9c9993c4-52ff-42fd-a186-6f7db35fdf8e",
+              "name": "text",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a6f211c8-5025-4b8a-aa47-870ca3d8ba66",
+      "name": "Normalize Chat",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c864cecd-d16b-4f02-a99a-ae59e2edc6f1",
+              "name": "channel",
+              "value": "email",
+              "type": "string"
+            },
+            {
+              "id": "70c36056-9d7a-4abb-a814-7366e72daddb",
+              "name": "user",
+              "value": "={{ $json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "54859047-40df-4096-af71-fe81696a260d",
+              "name": "text",
+              "value": "={{ $json.Subject }}\n{{ $json.snippet }}",
+              "type": "string"
+            },
+            {
+              "id": "86b40ef2-4a78-4039-a591-f1f2d72c4ca1",
+              "name": "message_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "29eb9b7b-424c-4851-a0a7-f0977c0d1f88",
+      "name": "Normalize Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "Tum \"YourBrand\" ke support agent ho. Policies:\n- Refund 7 din ke andar, unused product.\n- Delivery 3-5 working days.\n- Order status ke liye order ID maango.\nSirf in policies aur knowledge tool se jawab do. Agar customer gussa hai, refund ₹5000 se upar hai, legal baat hai, ya tumhe pakka nahi pata — sirf likho: ESCALATE: <ek line reason>"
+        }
+      },
+      "id": "b0cc0ccd-94c6-475b-a1ed-116eb86dd1ec",
+      "name": "Support Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "bb915a0a-6327-44b6-adca-76f550061929",
+      "name": "Agent Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.user }}",
+        "contextWindowLength": 10
+      },
+      "id": "ea9f8b07-e567-4a37-ae3d-ec62b8fa2bf5",
+      "name": "Agent Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        570,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "282981b1-c631-4c12-a27d-dc6d968f1c96",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "ESCALATE",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1675ce1f-eb56-43f8-ad19-eea99b9a5322",
+      "name": "Escalate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Tickets",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "0ead1381-fffb-44cb-aea0-b4747b81d01f",
+      "name": "Create Ticket",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#support",
+          "mode": "name"
+        },
+        "text": "=🎫 New ticket ({{ $('Escalate?').item.json.output }})",
+        "otherOptions": {}
+      },
+      "id": "b992f78f-36d9-4ccc-a429-8ab733e49bf7",
+      "name": "Alert Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bc776abb-5ee7-4d38-a9ac-c1a246647ff7",
+              "leftValue": "={{ $('Normalize Email').isExecuted }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a8e987b0-64c6-4945-a65d-c1cbde5d73de",
+      "name": "Email or Chat?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Normalize Email').item.json.message_id }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "bb8e4f65-45ff-4f8b-acee-7b5d2cd1a6f1",
+      "name": "Reply Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "343aadc5-6656-4714-aebf-1db524899760",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d4b34b8-3f9f-4ae8-a599-3e4a089f04aa",
+      "name": "Chat Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1300,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Website Chat": {
+      "main": [
+        [
+          {
+            "node": "Normalize Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support Email": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Chat": {
+      "main": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support Agent": {
+      "main": [
+        [
+          {
+            "node": "Escalate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalate?": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email or Chat?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Alert Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email or Chat?": {
+      "main": [
+        [
+          {
+            "node": "Reply Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chat Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

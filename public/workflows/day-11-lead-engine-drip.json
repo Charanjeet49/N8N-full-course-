@@ -1,0 +1,293 @@
+{
+  "name": "Day 11 — Complete Lead Engine + 3-Day Drip",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 11: Complete Lead Engine + 3-Day Drip\n\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: WhatsApp Business Cloud (Meta token)\n- Connect: Gmail (Google OAuth)\n- \"CRM\" tab headers: name, email, phone, company, budget, score, stage, created\n- WhatsApp Cloud API ka Phone Number ID Meta developer dashboard se lo (ya WhatsApp node hata ke Telegram lagao)\n- Testing ke liye Wait ko 1 minute kar lo\n\nCourse: Day 11 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "f9203b6a-d6d3-4403-a32a-987ef0e0cc42",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Get a free automation audit",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "phone",
+              "placeholder": "919876543210",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "company"
+            },
+            {
+              "fieldLabel": "budget",
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "98e0b9fa-66f5-4c1e-a3f0-0306f9260e4d",
+      "name": "Lead Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "7c6b5bfe-98e6-46ff-a0a9-374da5fd914d"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((i) => {\n  const b = Number(i.json.budget) || 0;\n  const score = (b >= 50000 ? 50 : b >= 15000 ? 30 : 10) + (i.json.company ? 20 : 0);\n  return { json: { ...i.json, score, stage: score >= 50 ? 'hot' : 'nurture', created: new Date().toISOString() } };\n});"
+      },
+      "id": "cf910766-0b3f-40f3-ae8f-f47813ec2dee",
+      "name": "Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "CRM",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "4e296826-d1e9-4751-aa90-cb43fb2a7a3b",
+      "name": "CRM Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "YOUR_WHATSAPP_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('Score').item.json.phone }}",
+        "textBody": "=Hi {{ $('Score').item.json.name }} 👋 Audit request mil gayi! Kal tak aapko plan bhejte hain.",
+        "additionalFields": {}
+      },
+      "id": "3524c41b-dead-4d5e-a11f-1960cb950a1d",
+      "name": "WhatsApp Hello",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Score').item.json.email }}",
+        "subject": "Aapka free audit — next steps",
+        "emailType": "text",
+        "message": "=Hi {{ $('Score').item.json.name }},\n\nShukriya! Yeh raha humara 3-step process...",
+        "options": {}
+      },
+      "id": "0b3cecc9-4a55-4195-adbd-0e4127bc05bf",
+      "name": "Day 0 Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "id": "5b6058b2-c1a9-429a-a7d7-573de3223901",
+      "name": "Wait 1 Day",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Score').item.json.email }}",
+        "subject": "Case study: 20 ghante/hafta kaise bache",
+        "emailType": "text",
+        "message": "=Hi {{ $('Score').item.json.name }},\n\nEk client ki kahani...",
+        "options": {}
+      },
+      "id": "5513ce63-6939-44e9-aef7-04ce9c8395ce",
+      "name": "Day 1 Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "days"
+      },
+      "id": "0294dfb7-485c-4e59-ab7a-15f37b3baf39",
+      "name": "Wait 2 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Score').item.json.email }}",
+        "subject": "15 min call book karein?",
+        "emailType": "text",
+        "message": "=Hi {{ $('Score').item.json.name }},\n\nKya is hafte 15 minute baat kar sakte hain? Yahan slot chuno: <your booking link>",
+        "options": {}
+      },
+      "id": "b0b4b3c4-3513-4974-a0fb-801efcfbd722",
+      "name": "Day 3 Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1820,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Lead Form": {
+      "main": [
+        [
+          {
+            "node": "Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score": {
+      "main": [
+        [
+          {
+            "node": "CRM Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Sheet": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Hello",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Day 0 Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 0 Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 Day": {
+      "main": [
+        [
+          {
+            "node": "Day 1 Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day 1 Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Days": {
+      "main": [
+        [
+          {
+            "node": "Day 3 Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -1,0 +1,4 @@
+# "Caddyfile" naam se save karo. Domain ka A record VPS IP par point hona chahiye.
+n8n.yourdomain.com {
+  reverse_proxy n8n:5678
+}

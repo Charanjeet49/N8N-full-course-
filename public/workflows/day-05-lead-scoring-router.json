@@ -1,0 +1,262 @@
+{
+  "name": "Day 05 — Lead Scoring + Smart Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 5: Lead Scoring + Smart Routing\n\n\n**Setup:**\n- Connect: Slack (OAuth / bot token)\n- Connect: Gmail (Google OAuth)\n- Connect: Google Sheets (Google OAuth)\n- Slack mein #sales channel banao (ya Slack node ko Telegram se replace karo)\n\nCourse: Day 5 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "026ae8ad-c353-4849-aa82-0d62a751f3fc",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "score-lead",
+        "options": {}
+      },
+      "id": "d4efbd34-b66e-48a0-a209-9c3ed42d8612",
+      "name": "Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "cfa6c9f3-a926-424c-ac90-dcafd4f4c3a4"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item) => {\n  const b = item.json.body || item.json;\n  let score = 0;\n  const budget = Number(b.budget) || 0;\n  if (budget >= 50000) score += 40; else if (budget >= 15000) score += 25; else score += 5;\n  if (b.urgency === 'this week') score += 30; else if (b.urgency === 'this month') score += 15;\n  if (b.source === 'referral') score += 20; else if (b.source === 'website') score += 10;\n  if (b.company) score += 10;\n  return { json: { ...b, score: Math.min(score, 100) } };\n});"
+      },
+      "id": "97d703cb-e67e-4e59-aa88-e3f5edc8b19e",
+      "name": "Score Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b706399d-fee1-4f0a-a4ee-a049675f6c62",
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 70,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "hot"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d4f084ce-d161-410c-a510-275d5fa26fbd",
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 40,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "warm"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4620c145-69ae-41ec-a935-bcc2371ae2fe",
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 40,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cold"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e80ac1a2-7cf3-49a1-a58c-047056796a42",
+      "name": "Route by Score",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#sales",
+          "mode": "name"
+        },
+        "text": "=🔥 HOT lead ({{ $json.score }}): {{ $json.name }} · ₹{{ $json.budget }} · {{ $json.phone }}",
+        "otherOptions": {}
+      },
+      "id": "a5c23fb6-c946-4063-aa5e-0c7e2998e8de",
+      "name": "Hot → Slack Sales",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Aapke automation project ke liye kuch ideas",
+        "emailType": "text",
+        "message": "=Hi {{ $json.name }},\n\nShukriya interest dikhane ke liye! Yeh 3 case studies dekhiye...\n\nTeam",
+        "options": {}
+      },
+      "id": "01bbcf6b-d7a8-4c3a-a015-00fd5f6c7c00",
+      "name": "Warm → Nurture Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Cold Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "2308622c-7bed-42a6-a828-8345604d7f5e",
+      "name": "Cold → Archive",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        780,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Route by Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Score": {
+      "main": [
+        [
+          {
+            "node": "Hot → Slack Sales",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Warm → Nurture Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cold → Archive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "name": "Day 17 — Invoice Inbox → AI Extraction → Accounting Sheet",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 17: Invoice Inbox → AI Extraction → Accounting Sheet\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- \"Invoices\" tab headers: vendor, invoice_no, invoice_date, gstin, taxable_amount, gst_amount, total, email_from, received, status\n- Agar output \"output\" ke andar aaye to Add Source mein {{ $json.output.vendor }} jaise map karo\n\nCourse: Day 17 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "5efc7f87-fe60-4d58-a967-9a2e24872b69",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment filename:pdf (invoice OR bill)"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "16ca8878-f27a-42fc-af4f-20769e24ec80",
+      "name": "Invoice Email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "id": "23198b0d-8780-4187-a8fb-40d42cdf34c0",
+      "name": "PDF to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"vendor\": \"ABC Traders\",\n  \"invoice_no\": \"INV-2291\",\n  \"invoice_date\": \"2026-11-01\",\n  \"gstin\": \"07ABCDE1234F1Z5\",\n  \"taxable_amount\": 10000,\n  \"gst_amount\": 1800,\n  \"total\": 11800\n}",
+        "options": {
+          "systemPromptTemplate": "Tum ek accountant ho. Invoice text se sirf maange gaye fields nikaalo. Jo field na mile use null rakho. Amounts sirf number mein (₹ ya comma nahi). Date YYYY-MM-DD."
+        }
+      },
+      "id": "2a4eea9e-4e56-4e44-ac1e-c53ed58ca916",
+      "name": "Extract Invoice Data",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "ad4c4b6e-0bcf-47b4-a203-a2c4bd602802",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5cfcd04f-f537-43a1-a9a1-45909c830826",
+              "name": "email_from",
+              "value": "={{ $('Invoice Email').item.json.from.text }}",
+              "type": "string"
+            },
+            {
+              "id": "541d177f-327c-410a-a8b2-2e8c89d2fdf0",
+              "name": "received",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "18b47a84-f6e0-48bb-a949-610df71caca9",
+              "name": "status",
+              "value": "to verify",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "de158947-6a62-418f-a335-9caf21e9d356",
+      "name": "Add Source",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Invoices",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "51be7c97-ab78-4e3c-af91-04702b611174",
+      "name": "Accounting Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Invoice Email": {
+      "main": [
+        [
+          {
+            "node": "PDF to Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF to Text": {
+      "main": [
+        [
+          {
+            "node": "Extract Invoice Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Invoice Data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Invoice Data": {
+      "main": [
+        [
+          {
+            "node": "Add Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Source": {
+      "main": [
+        [
+          {
+            "node": "Accounting Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

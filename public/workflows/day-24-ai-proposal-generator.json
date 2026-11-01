@@ -1,0 +1,207 @@
+{
+  "name": "Day 24 — AI Proposal Generator for Freelancers",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 24: AI Proposal Generator for Freelancers\n\n\n**Setup:**\n- Connect: OpenAI API key\n- Connect: Gmail (Google OAuth)\n- Connect: Google Sheets (Google OAuth)\n- \"Deals\" tab headers: client, email, budget, stage, date\n\nCourse: Day 24 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "78e41ce8-8856-40a7-aac2-93437b80ffa8",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "New proposal",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "client_name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "client_email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "business",
+              "placeholder": "e.g. dental clinic, 2 branches",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "problem",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "hours_wasted_per_week",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "budget",
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2113e92d-17dd-4cf0-ae85-dadb6dca1583",
+      "name": "Discovery Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "0316d47c-6b62-44d8-a648-b84aef5bea49"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior automation consultant writing a short, clear proposal email.\nClient: {{ $json.client_name }} ({{ $json.business }})\nProblem: {{ $json.problem }}\nHours wasted per week: {{ $json.hours_wasted_per_week }}\nBudget: ₹{{ $json.budget }}\n\nWrite: 1) one-line understanding of the problem, 2) proposed n8n solution in 3-5 bullets (trigger → steps → result), 3) deliverables, 4) timeline (phases), 5) price: one-time setup + optional monthly maintenance, within budget, 6) ROI: hours saved × ₹500/hour per month, 7) next step: 50% advance to start. Simple English, max 250 words, no hype."
+      },
+      "id": "b73078e1-dfd8-4d22-a4ad-66d155be3501",
+      "name": "Write Proposal",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "8e6719ef-7ba3-4745-a318-7e7d58bdcee0",
+      "name": "Proposal Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Proposal: automation for {{ $('Discovery Form').item.json.business }}",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {
+          "sendTo": "={{ $('Discovery Form').item.json.client_email }}"
+        }
+      },
+      "id": "b27ef4c6-098f-4018-adc6-7f4a4a32ebad",
+      "name": "Gmail Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Deals",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "client": "={{ $('Discovery Form').item.json.client_name }}",
+            "email": "={{ $('Discovery Form').item.json.client_email }}",
+            "budget": "={{ $('Discovery Form').item.json.budget }}",
+            "stage": "proposal sent",
+            "date": "={{ $now.toFormat('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "58a969bb-19c6-4a14-ac67-0c995a0f43f7",
+      "name": "Deals Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Discovery Form": {
+      "main": [
+        [
+          {
+            "node": "Write Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Proposal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Proposal": {
+      "main": [
+        [
+          {
+            "node": "Gmail Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Draft": {
+      "main": [
+        [
+          {
+            "node": "Deals Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

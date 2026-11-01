@@ -1,0 +1,429 @@
+{
+  "name": "Day 23 — Finance Autopilot: Invoice Approval + Monthly P&L",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 23: Finance Autopilot: Invoice Approval + Monthly P&L\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- Sheet tabs: \"Payables\" (vendor, invoice_no, total, due_date, status) aur \"Ledger\" (date, type, category, amount)\n- Manager / owner emails badlo\n\nCourse: Day 23 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "6b7ac6ae-1c68-4c77-a35e-6a5e0baf6964",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment filename:pdf invoice"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "a6d9fb25-be33-4070-a9de-deccda6d6343",
+      "name": "Vendor Invoice",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "id": "23b398ff-673d-4ade-a6f8-98c7445c38fc",
+      "name": "PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        260,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{ \"vendor\": \"ABC\", \"invoice_no\": \"INV-1\", \"due_date\": \"2026-11-15\", \"total\": 12500 }",
+        "options": {}
+      },
+      "id": "7ef8cd17-9994-4880-a141-aaeffddf2fcf",
+      "name": "Extract",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "4e79a2cf-fdf9-485b-a488-f17cccbd9c47",
+      "name": "Extract Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9ff84da7-d990-4381-af93-c56069044b5f",
+              "leftValue": "={{ $json.output.total }}",
+              "rightValue": 10000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cd0caabf-76ab-43e6-a79a-1f26c8d29ae0",
+      "name": "Above 10k?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "manager@yourcompany.com",
+        "subject": "=Approve invoice {{ $json.output.invoice_no }} — ₹{{ $json.output.total }}",
+        "message": "=Vendor: {{ $json.output.vendor }}\nAmount: ₹{{ $json.output.total }}\nDue: {{ $json.output.due_date }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "id": "6dd9b7eb-af64-4646-a18f-c0bc12e75eb4",
+      "name": "Manager Approval",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e76d479-abb4-4248-a97f-67fdd4fbce0d",
+              "name": "vendor",
+              "value": "={{ $('Extract').item.json.output.vendor }}",
+              "type": "string"
+            },
+            {
+              "id": "41a3d16b-ee6e-4692-a1ee-0cae61dbb2a4",
+              "name": "invoice_no",
+              "value": "={{ $('Extract').item.json.output.invoice_no }}",
+              "type": "string"
+            },
+            {
+              "id": "d95767f7-16ac-49c2-ac4a-4627e049b4e0",
+              "name": "total",
+              "value": "={{ $('Extract').item.json.output.total }}",
+              "type": "number"
+            },
+            {
+              "id": "30bddba9-bf73-4de7-ad01-d5d811281741",
+              "name": "due_date",
+              "value": "={{ $('Extract').item.json.output.due_date }}",
+              "type": "string"
+            },
+            {
+              "id": "c4476de9-ebed-403d-aa89-8e5dda5df608",
+              "name": "status",
+              "value": "={{ $json.data ? ($json.data.approved ? 'approved' : 'rejected') : 'auto-approved' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cdde7088-b0c4-4a0c-ae76-a0327a4aa3a5",
+      "name": "Set Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payables",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "9d4fb8b4-65da-4ec0-a9a7-026deb65b2a6",
+      "name": "Payables",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtDayOfMonth": 1,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "0c3496c7-94fc-4aa3-a218-1f8334e39291",
+      "name": "1st of Month",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Ledger",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "57b614db-4466-49c2-a1cc-a2a284a5c527",
+      "name": "Read Ledger",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ledger columns: date, type (income/expense), category, amount\nconst m = new Date(); m.setMonth(m.getMonth() - 1);\nconst key = m.toISOString().slice(0, 7);\nconst rows = $input.all().map((i) => i.json).filter((r) => String(r.date).startsWith(key));\nconst sum = (t) => rows.filter((r) => r.type === t).reduce((a, r) => a + Number(r.amount || 0), 0);\nconst income = sum('income'), expense = sum('expense');\nconst cats = {};\nrows.filter((r) => r.type === 'expense').forEach((r) => { cats[r.category] = (cats[r.category] || 0) + Number(r.amount || 0); });\nconst top = Object.entries(cats).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([c, v]) => '<li>' + c + ': ₹' + v.toLocaleString('en-IN') + '</li>').join('');\nreturn [{ json: { month: key, html: '<h2>P&L — ' + key + '</h2><p>Income: ₹' + income.toLocaleString('en-IN') + '<br>Expense: ₹' + expense.toLocaleString('en-IN') + '<br><b>Profit: ₹' + (income - expense).toLocaleString('en-IN') + '</b></p><h4>Top expenses</h4><ul>' + top + '</ul>' } }];"
+      },
+      "id": "5b2b5da1-a341-4eda-a89a-16bdfeaa2af3",
+      "name": "P&L Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "owner@yourcompany.com",
+        "subject": "=📈 Monthly P&L — {{ $json.month }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "d70cad6c-3c64-43f1-a983-95030f5929f0",
+      "name": "Email P&L",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Vendor Invoice": {
+      "main": [
+        [
+          {
+            "node": "PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "Above 10k?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Above 10k?": {
+      "main": [
+        [
+          {
+            "node": "Manager Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manager Approval": {
+      "main": [
+        [
+          {
+            "node": "Set Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Status": {
+      "main": [
+        [
+          {
+            "node": "Payables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1st of Month": {
+      "main": [
+        [
+          {
+            "node": "Read Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Ledger": {
+      "main": [
+        [
+          {
+            "node": "P&L Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "P&L Summary": {
+      "main": [
+        [
+          {
+            "node": "Email P&L",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
