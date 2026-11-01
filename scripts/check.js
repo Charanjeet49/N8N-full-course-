@@ -11,7 +11,7 @@ for (const [route, html] of Object.entries(pages)) {
   if (dup.length) { console.error(route, 'duplicate ids:', [...new Set(dup)]); bad++; }
   for (const [, href] of html.matchAll(/<a\b[^>]*href="([^"]+)"/g)) {
     if (/^(https?:|mailto:|tel:)/.test(href)) continue;
-    if (href.startsWith('/workflows/')) { if (!require('fs').existsSync(require('path').join(__dirname, '..', 'public', href))) { console.error(route, 'missing file:', href); bad++; } continue; }
+    if (href.startsWith('/workflows/') || href.startsWith('/pdf/')) { if (!require('fs').existsSync(require('path').join(__dirname, '..', 'public', href))) { console.error(route, 'missing file:', href); bad++; } continue; }
     const [p, h] = href.split('#'); const target = p || route;
     if (!pages[target]) { console.error(route, 'broken page link:', href); bad++; continue; }
     if (h && !idMap[target].has(h)) { console.error(route, 'broken anchor:', href); bad++; }

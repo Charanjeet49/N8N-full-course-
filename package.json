@@ -8,7 +8,8 @@
     "dev": "node --watch server.js",
     "build": "node scripts/workflows.js && node scripts/build.js",
     "workflows": "node scripts/workflows.js",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "pdf": "node scripts/pdf.js"
   },
   "engines": {
     "node": ">=18"
@@ -17,5 +18,8 @@
     "express": "^4.21.2"
   },
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "qrcode": "^1.5.4"
+  }
 }
