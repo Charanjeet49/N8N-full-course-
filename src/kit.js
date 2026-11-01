@@ -10,9 +10,10 @@ const strip = (s) => String(s).replace(/<[^>]+>/g, '');
 // Har page ka apna section builder (numbering + drawer index)
 function makeBuilder() {
   const registry = [];
-  function sec({ id, title, eyebrow = '', sub = '', body = '', cls = '', group = 'Overview', head = true, style = '' }) {
+  function sec({ id, title, eyebrow = '', sub = '', body = '', cls = '', group = 'Overview', head = true, style = '', mentor = false }) {
     const n = registry.length + 1;
-    registry.push({ id, n, title, group });
+    registry.push({ id, n, title, group, mentor });
+    if (mentor) cls += ' mentor-only';
     const header = head
       ? `<header class="sec-head reveal">
           <span class="sec-num">${pad(n)}</span>
@@ -28,7 +29,7 @@ function makeBuilder() {
   function drawer() {
     const groups = {};
     registry.forEach((r) => { (groups[r.group] = groups[r.group] || []).push(r); });
-    return Object.entries(groups).map(([g, items]) => `<div class="dr-g"><h5>${esc(g)}</h5>${items.map((r) => `<a href="#${r.id}"><span>${pad(r.n)}</span>${strip(r.title)}</a>`).join('')}</div>`).join('');
+    return Object.entries(groups).map(([g, items]) => `<div class="dr-g"><h5>${esc(g)}</h5>${items.map((r) => `<a href="#${r.id}"${r.mentor ? ' class="mentor-only"' : ''}><span>${pad(r.n)}</span>${strip(r.title)}</a>`).join('')}</div>`).join('');
   }
   return { sec, registry, drawer, next: () => registry.length + 1 };
 }

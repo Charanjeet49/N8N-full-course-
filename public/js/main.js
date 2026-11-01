@@ -368,6 +368,138 @@
     ns.addEventListener('input', apply);
   }
 
+
+  // ================= V5: STUDENT FEATURES =================
+  const lstore = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+
+  // ---------- Mentor mode ----------
+  $$('[data-mentor-toggle]').forEach((b) => b.addEventListener('click', () => {
+    const on = !document.documentElement.classList.contains('mentor-mode');
+    document.documentElement.classList.toggle('mentor-mode', on);
+    try { on ? localStorage.setItem('mentor', '1') : localStorage.removeItem('mentor'); } catch {}
+    toast(on ? '👨‍🏫 Mentor mode ON — teaching notes dikh rahe hain' : 'Student view ✓');
+  }));
+
+  // ---------- Progress tracker ----------
+  const done = () => lstore.get('n8n_done', []);
+  const paintProgress = () => {
+    const d = done();
+    $$('.day-dots a').forEach((a) => a.classList.toggle('done', d.includes(Number(a.textContent))));
+    $$('[data-complete]').forEach((b) => {
+      const n = Number(b.dataset.complete); const ok = d.includes(n);
+      b.textContent = ok ? `✓ Day ${n} complete — wapas undo karo?` : `✅ Day ${n} complete`;
+      b.classList.toggle('btn-ghost', ok); b.classList.toggle('btn-primary', !ok);
+    });
+    const lbl = $('[data-progress-label]');
+    if (lbl) {
+      const streak = lstore.get('n8n_streak', { n: 0 }).n;
+      lbl.textContent = `${d.length}/25 din complete${streak > 1 ? ` · 🔥 ${streak} din streak` : ''}`;
+    }
+    $$('.mod-day').forEach((a) => { const m = (a.getAttribute('href') || '').match(/day-(\d+)/); if (m) a.classList.toggle('is-done', d.includes(Number(m[1]))); });
+  };
+  $$('[data-complete]').forEach((b) => b.addEventListener('click', () => {
+    const n = Number(b.dataset.complete); let d = done();
+    if (d.includes(n)) { d = d.filter((x) => x !== n); toast('Undo ho gaya'); }
+    else {
+      d.push(n);
+      const today = new Date().toISOString().slice(0, 10);
+      const st = lstore.get('n8n_streak', { n: 0, last: '' });
+      const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      if (st.last !== today) { st.n = st.last === y ? st.n + 1 : 1; st.last = today; lstore.set('n8n_streak', st); }
+      toast(n === 25 ? '🎓 Course complete! Bahut badhiya!' : `🎉 Shabaash! Day ${n} done — ${d.length}/25`);
+    }
+    lstore.set('n8n_done', d); paintProgress();
+  }));
+  paintProgress();
+
+  // ---------- Day 0 setup checklist ----------
+  const meter = $('[data-setup-meter]');
+  if (meter) {
+    const boxes = $$('[data-setup-check]');
+    const paint = () => {
+      const ok = lstore.get('n8n_setup', []);
+      boxes.forEach((c) => { c.checked = ok.includes(c.dataset.setupCheck); c.closest('.setup-item').classList.toggle('ok', c.checked); });
+      meter.querySelector('span').style.width = `${(ok.length / boxes.length) * 100}%`;
+      meter.querySelector('b').textContent = ok.length === boxes.length ? '🎉 Sab ready! Day 1 ke liye taiyaar' : `${ok.length} / ${boxes.length} ready`;
+    };
+    boxes.forEach((c) => c.addEventListener('change', () => {
+      let ok = lstore.get('n8n_setup', []);
+      ok = c.checked ? [...new Set([...ok, c.dataset.setupCheck])] : ok.filter((x) => x !== c.dataset.setupCheck);
+      lstore.set('n8n_setup', ok); paint();
+    }));
+    paint();
+  }
+
+  // ---------- Glossary popups (pehli baar aane par) ----------
+  const gEl = $('#glossaryData');
+  if (gEl && document.body.dataset.page === 'lesson') {
+    const terms = JSON.parse(gEl.textContent).sort((a, b) => b[0].length - a[0].length);
+    const seen = new Set();
+    const esc2 = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`\\b(${terms.map((t) => esc2(t[0])).join('|')})\\b`, 'i');
+    const map = Object.fromEntries(terms.map(([t, d]) => [t.toLowerCase(), d]));
+    const roots = $$('main .sec:not(.lesson-hero) p, main .sec .concept h3, main .obj-x summary span, main .sec-sub, main .ag-e, main .ox p');
+    roots.forEach((root) => {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement.closest('a, button, code, pre, kbd, .gl-t, summary b') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach((tn) => {
+        const m = tn.nodeValue.match(re); if (!m) return;
+        const prevCh = tn.nodeValue[m.index - 1] || ''; if (prevCh === '$' || prevCh === '.' || prevCh === '{') return;
+        const key = m[1].toLowerCase(); if (seen.has(key) || seen.size > 40) return;
+        seen.add(key);
+        const span = document.createElement('span');
+        span.className = 'gl-t'; span.tabIndex = 0; span.textContent = m[1]; span.dataset.tip = map[key];
+        const after = tn.splitText(m.index); after.nodeValue = after.nodeValue.slice(m[1].length);
+        tn.parentNode.insertBefore(span, after);
+      });
+    });
+    const tip = document.createElement('div'); tip.className = 'gl-tip'; tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+    let cur = null;
+    const show = (t) => {
+      cur = t; tip.textContent = t.dataset.tip; tip.classList.add('on');
+      const r = t.getBoundingClientRect(); const tw = tip.offsetWidth; const th = tip.offsetHeight;
+      const left = Math.min(innerWidth - tw - 8, Math.max(8, r.left + r.width / 2 - tw / 2));
+      const top = r.top - th - 8 < 8 ? r.bottom + 8 : r.top - th - 8;
+      tip.style.left = left + 'px'; tip.style.top = top + 'px';
+    };
+    const hide = () => { cur = null; tip.classList.remove('on'); };
+    $$('.gl-t').forEach((t) => { t.addEventListener('mouseenter', () => show(t)); t.addEventListener('mouseleave', hide); t.addEventListener('focus', () => show(t)); t.addEventListener('blur', hide); });
+    document.addEventListener('click', (e) => { const t = e.target.closest('.gl-t'); if (t) { cur === t ? hide() : show(t); } else hide(); });
+    addEventListener('scroll', hide, { passive: true });
+  }
+
+  // ---------- Expression playground ----------
+  const pg = $('[data-playground]');
+  if (pg) {
+    const S = String.prototype;
+    if (!S.toTitleCase) Object.defineProperty(S, 'toTitleCase', { value() { return this.toLowerCase().replace(/(^|\s|-)\S/g, (c) => c.toUpperCase()); } });
+    if (!S.isEmail) Object.defineProperty(S, 'isEmail', { value() { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.trim()); } });
+    if (!S.extractDomain) Object.defineProperty(S, 'extractDomain', { value() { const m = this.match(/@([^\s>]+)/) || this.match(/^(?:https?:\/\/)?([^/\s]+)/); return m ? m[1].toLowerCase() : ''; } });
+    if (!S.isEmpty) Object.defineProperty(S, 'isEmpty', { value() { return this.trim().length === 0; } });
+    const fmt = (dt, f) => { const p = (x) => String(x).padStart(2, '0'); const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; return f.replace('yyyy', dt.getFullYear()).replace('LLL', M[dt.getMonth()]).replace('MM', p(dt.getMonth() + 1)).replace('dd', p(dt.getDate())).replace('HH', p(dt.getHours())).replace('mm', p(dt.getMinutes())); };
+    const mkNow = (dt) => ({ toFormat: (f) => fmt(dt, f), plus: (o) => mkNow(new Date(dt.getTime() + ((o.days || 0) * 864e5) + ((o.hours || 0) * 36e5))), minus: (o) => mkNow(new Date(dt.getTime() - ((o.days || 0) * 864e5) - ((o.hours || 0) * 36e5))), toISO: () => dt.toISOString(), toString: () => dt.toISOString() });
+    const ta = pg.querySelector('.pg-json'), inp = pg.querySelector('.pg-expr'), out = pg.querySelector('.pg-out');
+    const run = () => {
+      let data; try { data = JSON.parse(ta.value); } catch (e) { out.textContent = '⚠️ Sample data valid JSON nahi hai: ' + e.message; out.className = 'pg-out bad'; return; }
+      const src = inp.value;
+      try {
+        const evalOne = (code) => Function('$json', '$now', '$', `"use strict"; return (${code});`)(data, mkNow(new Date()), () => ({ item: { json: data }, first: () => ({ json: data }) }));
+        const parts = src.match(/{{([\s\S]+?)}}/g);
+        let res;
+        if (!parts) res = 'Expression {{ }} ke andar likho, jaise {{ $json.city }}';
+        else if (parts.length === 1 && src.trim() === parts[0]) { const v = evalOne(parts[0].slice(2, -2)); res = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v); }
+        else res = src.replace(/{{([\s\S]+?)}}/g, (_, c) => { const v = evalOne(c); return typeof v === 'object' ? JSON.stringify(v) : String(v); });
+        out.textContent = res; out.className = 'pg-out';
+      } catch (e) { out.textContent = '⚠️ ' + e.message + '\n(Check karo: field ka naam sahi hai? Brackets band hain?)'; out.className = 'pg-out bad'; }
+    };
+    ta.addEventListener('input', run); inp.addEventListener('input', run);
+    pg.querySelectorAll('[data-pg-try]').forEach((b) => b.addEventListener('click', () => { inp.value = b.dataset.pgTry; run(); }));
+    run();
+  }
+
   // Deep-link to a node card: reveal it immediately
   if (location.hash) { const t = document.getElementById(location.hash.slice(1)); t?.classList.add('in'); }
 })();

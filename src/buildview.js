@@ -1,5 +1,6 @@
 // Today's Build — HTML blocks (lesson page + resources page)
 const { esc, flowDiagram } = require('./kit');
+const { earn } = require('./student');
 
 const copyBtn = (text, label = 'Copy') => `<button class="copy" data-copy="${esc(text)}">${label}</button>`;
 const jsonScript = (b) => `<script type="application/json" id="wf-${b.day}">${b.jsonText.replace(/</g, '\\u003c')}</script>`;
@@ -25,6 +26,7 @@ function buildBlock(b, color) {
       </div>
     </div>
     ${flowDiagram(b.flow, color)}
+    ${earn[b.day] ? `<div class="tb-earn"><span>💰</span><div><b>Isse kitna kama sakte ho?</b><p>${esc(earn[b.day][0])} — aam taur par <b>${esc(earn[b.day][1])}</b>. (Andaaza hai; client aur scope ke hisaab se badalta hai.)</p></div></div>` : ''}
     <div class="tb-how"><b>Import kaise karein:</b> n8n mein naya workflow kholo → canvas par click → <kbd>Ctrl</kbd>+<kbd>V</kbd> (Mac: <kbd>⌘</kbd>+<kbd>V</kbd>). Ya … menu → <i>Import from File</i>.</div>
     <div class="grid g2 tb-grid">
       <div class="panel"><h4>🔑 Setup (import ke baad)</h4><ul class="checks">${b.creds.map((c) => `<li>Connect: <b>${esc(c)}</b></li>`).join('')}${(b.setup || []).map((s) => `<li>${esc(s)}</li>`).join('')}${!b.creds.length && !(b.setup || []).length ? '<li>Koi setup nahi — seedha Test karo!</li>' : ''}</ul></div>

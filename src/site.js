@@ -7,8 +7,10 @@ const PAGES = () => {
   const { renderNodes } = require('./pages/nodes');
   const { renderDocs } = require('./pages/docs');
   const { renderResources } = require('./pages/resources');
+  const { renderSetup } = require('./pages/setup');
+  const { renderCheatsheets } = require('./pages/cheatsheets');
   const { totalDays } = require('./config');
-  const map = { '/': render, '/nodes': renderNodes, '/docs': renderDocs, '/resources': renderResources };
+  const map = { '/': render, '/nodes': renderNodes, '/docs': renderDocs, '/resources': renderResources, '/setup': renderSetup, '/cheatsheets': renderCheatsheets };
   for (let d = 1; d <= totalDays; d++) map[`/day/${d}`] = () => renderLesson(d);
   return map;
 };
