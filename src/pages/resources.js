@@ -38,7 +38,7 @@ function renderResources() {
     body: `<div class="reveal"><span class="eyebrow">Student resources · copy → paste → automation ready</span>
       <h1 class="lh-title">25 Ready n8n Workflows<br><span class="grad">+ prompts, sample data & configs</span></h1>
       <p class="lead">Har din ka live build yahan ready hai. JSON copy karo, n8n canvas par paste karo — poora workflow ban ke aa jaayega. Bas apne accounts connect karo aur chalao.</p>
-      <div class="hero-cta"><a class="btn btn-primary magnetic" href="/workflows/n8n-course-all-workflows.zip" download>⬇ Saare workflows (ZIP)</a><a class="btn btn-ghost" href="#builds">Day-wise builds ↓</a><a class="btn btn-link" href="#prompt-library">💬 Prompt library</a></div>
+      <div class="hero-cta"><a class="btn btn-primary magnetic" href="/workflows/n8n-course-all-workflows.zip" download>⬇ Saare workflows (ZIP)</a><a class="btn btn-ghost" href="#builds">Day-wise builds ↓</a><a class="btn btn-ghost" href="#notes-pdf">📚 Notes PDF</a><a class="btn btn-link" href="#prompt-library">💬 Prompt library</a></div>
       <div class="res-stats"><div><b>${all.length}</b><small>workflows</small></div><div><b>${all.reduce((a, b) => a + b.json.nodes.length - 1, 0)}</b><small>nodes</small></div><div><b>${totalPrompts}</b><small>prompts</small></div><div><b>${Object.keys(assets).length}</b><small>extra files</small></div></div></div>`,
   }));
 
@@ -52,6 +52,13 @@ function renderResources() {
     id: 'builds', group: 'Workflows', eyebrow: 'Day-wise', title: 'Saare 25 builds — ek jagah',
     sub: 'Card par click → us din ka poora lesson (setup, test steps, prompts). Copy / Download yahin se bhi.',
     body: `<div class="grid g3 res-grid">${all.map((b, i) => { const m = dayMod[b.day]; return `<div class="card res-card reveal" style="--c:${m.color};--d:${(i % 6) * 50}ms"><span class="rc-day">Day ${pad(b.day)}</span><h3><a href="/day/${b.day}#todays-build">${esc(b.name)}</a></h3><p>${esc(b.what.split('. ')[0])}.</p><div class="rc-meta">${b.json.nodes.length - 1} nodes${b.creds.length ? ' · ' + b.creds.length + ' account' + (b.creds.length > 1 ? 's' : '') : ' · no setup'}</div><div class="rc-act"><button class="mini-btn" data-copy-url="${b.url}">📋 Copy</button><a class="mini-btn" href="${b.url}" download>⬇ .json</a><a class="mini-btn" href="/day/${b.day}#todays-build">Lesson →</a></div></div>`; }).join('')}</div>`,
+  }));
+
+  S.push(B.sec({
+    id: 'notes-pdf', group: 'Notes PDF', eyebrow: 'Download karo, offline padho', title: '📚 Saare Notes PDF — har din ki class notes',
+    sub: 'Har PDF mein: concepts, workflow diagram, step-by-step build, copy-paste prompts, QR code (workflow JSON), practice, quiz + answers aur notes likhne ka page.',
+    body: `<div class="np-book reveal"><span>📚</span><div><b>Poora course — ek PDF mein</b><small>25 din ki complete notes, index ke saath + completion certificate</small></div><a class="btn btn-primary" href="/pdf/n8n-course-complete-notes.pdf" download="n8n-Course-Complete-Notes.pdf">⬇ E-book download</a></div>
+      <div class="np-grid">${all.map((b, i) => { const m = dayMod[b.day]; return `<a class="np-card reveal" style="--c:${m.color};--d:${(i % 6) * 40}ms" href="/pdf/day-${pad(b.day)}-notes.pdf" download="Day-${pad(b.day)}-Notes-n8n-course.pdf"><span class="np-day">Day ${pad(b.day)}</span><b>${esc(b.dayTitle)}</b><em>⬇ PDF</em></a>`; }).join('')}</div>`,
   }));
 
   S.push(B.sec({

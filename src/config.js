@@ -6,6 +6,8 @@ module.exports = {
   courseName: 'n8n Automation Mastery',
   tagline: 'Zero se AI Automation Expert — 25 Live Classes mein',
   siteUrl: 'https://adifyskills.com/n8n-automation-course/',
+  // Notes PDF ke QR codes/links isi domain par point karte hain (live website ka domain, bina / ke end mein)
+  publicUrl: 'https://adifyskills.com',
 
   // ---------- BRAND ----------
   // Logo file public/img/ mein daalo (logo.svg / logo.png) aur path yahan likho.
