@@ -3,29 +3,26 @@
 Ek advanced, animated landing page / digital brochure for a **25-day live n8n & AI automation course** (2 hours per class).
 Node.js (Express) app, Hostinger Business **Node.js Web App** par directly deploy hota hai.
 
-## Kya hai andar (100 sections)
+## Kya hai andar — 28 pages, 569 sections
 
-| # | Group | Sections |
-|---|-------|----------|
-| 1–15 | Overview | Hero (animated workflow), apps marquee, stats, what is n8n, why now, who it's for, problems, transformation, at-a-glance, method, **live workflow simulator**, n8n vs Zapier vs Make, skills, roadmap, class format |
-| 16–23 | Modules | 8 module deep-dives (outcomes + day links) |
-| 24–48 | Day-wise classes | **Day 1 → Day 25**: topics, minute-by-minute 2-hour plan, live lab, homework, resources (official docs), tools |
-| 49–50 | Projects | 20 filterable projects, capstone + rubric |
-| 51–59 | Student journey | Day 0 → alumni timeline + 8 stage sections |
-| 60–62 | Career | Career paths, freelancing roadmap, agency blueprint |
-| 63–70 | Resources | Tools, library, downloads, template vault, prompt library, expressions cheat sheet, official links, self-hosting |
-| 71–75 | Prep & certification | Requirements, interactive checklist, assessments, cert levels, certificate preview |
-| 76–80 | Support | Mentor, support system, community, live class, LMS |
-| 81–93 | Offer | Bonuses, hackathon, industries, AI spotlight, testimonials, stories, 2 calculators, batches + countdown, pricing, EMI, guarantee, vs YouTube |
-| 94–100 | Help & enroll | FAQ, glossary search, rules, enroll steps, **lead form**, final CTA, footer |
+| Page | URL | Kya hai |
+|------|-----|---------|
+| Home / brochure | `/` | 106 sections: hero, curriculum roadmap, lesson library, node types, top 10 nodes, docs hub preview, video library, teacher guide, 8 modules, Day 1–25 summaries, projects, journey, careers, resources, pricing, FAQ, enroll form |
+| 25 lesson pages | `/day/1` … `/day/25` | Har din 17 sections: why, objectives, concepts + analogies, **animated workflow diagram**, step-by-step build (node docs links), sample input/output JSON, key snippet, 2-hour plan, teacher script, common mistakes, pro tips, lab + homework + practice ladder, **interactive quiz**, videos, docs reading list, nodes used |
+| Nodes Library | `/nodes` | 6 node types, node anatomy, **Top 10 / Top 50 / Top 100+** (107 nodes) with Hinglish explanation, use case, lesson day aur official docs link; search + filters |
+| Docs Hub | `/docs` | n8n official docs ka day-wise organized map (data, code, flow logic, AI, hosting, security, API, community) |
 
-Animations: preloader, particle network background, animated SVG workflow, typing headline, scroll reveals, counters, progress rings, 3D tilt cards, magnetic buttons, cursor glow, marquee, orbit, slider, countdowns. `prefers-reduced-motion` respected. **Download Brochure** button page ko print-ready PDF bana deta hai.
+Light theme, brand colors config se. Animations: particle network, animated SVG workflows, typing headline, scroll reveals, counters, progress rings, tilt cards, workflow simulator, countdowns. **Notes PDF / Download Brochure** buttons page ko print-ready PDF bana dete hain.
 
 ## Content kahan badlein
 
 | File | Kya hai |
 |------|---------|
-| `src/config.js` | Brand, batch date, price, phone/WhatsApp, email, instructor |
+| `src/config.js` | Brand, **logo path, brand colors**, batch date, price, phone/WhatsApp, email, instructor |
+| `public/img/logo.svg` | Apna logo yahan replace karo (PNG ho to `config.logo` mein path badlo) |
+| `src/lessons.js`, `src/lessons2.js` | 25 in-depth lessons (concepts, build steps, quiz, docs…) |
+| `src/nodes.js` | Nodes library (107 nodes, tiers, docs links) |
+| `src/pages/docs.js` | Docs hub links |
 | `src/curriculum.js` | 8 modules + 25 days (topics, agenda, lab, homework, resources) |
 | `src/content.js` | Baaki saare sections ka text (FAQ, careers, bonuses, etc.) |
 | `public/css/style.css`, `public/js/main.js` | Design & animations |
@@ -37,8 +34,8 @@ Animations: preloader, particle network background, animated SVG workflow, typin
 ```bash
 npm install
 npm run dev      # http://localhost:3000 (content edit turant dikhega)
-npm run check    # 100 sections + broken links check
-npm run build    # optional: dist/ static export
+npm run check    # saare pages ke sections + broken links check
+npm run build    # optional: dist/ static export (28 pages)
 ```
 
 ## Hostinger Business (Node.js Web App) par deploy

@@ -5,7 +5,6 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
-const { render } = require('./src/render');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,19 +24,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Page ko startup par ek baar render karke cache karte hain (fast)
-let html = render();
-if (process.env.NODE_ENV !== 'production') {
-  // Dev mode: har request par fresh render (content edit turant dikhe)
-  app.get(['/', '/index.html'], (req, res) => {
-    Object.keys(require.cache).forEach((k) => { if (k.includes(`${path.sep}src${path.sep}`)) delete require.cache[k]; });
-    res.type('html').send(require('./src/render').render());
-  });
-} else {
-  app.get(['/', '/index.html'], (req, res) => res.type('html').set('Cache-Control', 'public, max-age=300').send(html));
-}
+// Saare pages (home, 25 lessons, nodes, docs) startup par render karke cache
+const loadSite = () => {
+  Object.keys(require.cache).forEach((k) => { if (k.includes(`${path.sep}src${path.sep}`)) delete require.cache[k]; });
+  return require('./src/site').renderAll();
+};
+const PROD = process.env.NODE_ENV === 'production';
+let pages = loadSite();
+app.get(['/', '/index.html', '/nodes', '/docs', '/day/:n'], (req, res, next) => {
+  if (!PROD) pages = loadSite(); // dev: har request par fresh (content edit turant dikhe)
+  const route = req.path === '/index.html' ? '/' : req.path.replace(/\/$/, '') || '/';
+  const html = pages[route];
+  if (!html) return next();
+  res.type('html');
+  if (PROD) res.set('Cache-Control', 'public, max-age=300');
+  res.send(html);
+});
 
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 }));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: PROD ? '7d' : 0 }));
 
 app.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 

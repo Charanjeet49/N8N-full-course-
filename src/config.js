@@ -7,6 +7,18 @@ module.exports = {
   tagline: 'Zero se AI Automation Expert — 25 Live Classes mein',
   siteUrl: 'https://adifyskills.com/n8n-automation-course/',
 
+  // ---------- BRAND ----------
+  // Logo file public/img/ mein daalo (logo.svg / logo.png) aur path yahan likho.
+  logo: '/img/logo.svg',
+  showBrandText: true, // logo ke saath brand naam bhi dikhana hai?
+  favicon: '/img/favicon.svg',
+  // Logo ke brand colors yahan daalo — poori website inhi colors se theme hogi
+  brandColors: {
+    primary: '#ff6d5a',   // main brand color (buttons, highlights)
+    secondary: '#6a5cff', // second color (gradients)
+    accent: '#10b981',    // success / ticks
+  },
+
   // Batch details
   nextBatchStart: '2026-12-01T19:00:00+05:30', // countdown isi date tak chalega
   classTime: '7:00 PM – 9:00 PM IST',

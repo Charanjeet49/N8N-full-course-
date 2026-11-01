@@ -4,38 +4,16 @@
 const cfg = require('./config');
 const C = require('./content');
 const { modules, days } = require('./curriculum');
+const { nodes, nodeTypes } = require('./nodes');
+const { hub } = require('./pages/docs');
+const { yt, iconFor } = require('./kit');
 
-const esc = (s = '') => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const { esc, pad, makeBuilder, cards, chips } = require('./kit');
+const { layout, logo } = require('./layout');
 const money = (n) => cfg.pricing.currency + Number(n).toLocaleString('en-IN');
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
-const pad = (n) => String(n).padStart(2, '0');
-
-const registry = []; // [{id, n, title, group}]
-let counter = 0;
-
-function sec({ id, title, eyebrow = '', sub = '', body = '', cls = '', group = 'Overview', head = true, style = '' }) {
-  counter += 1;
-  const n = counter;
-  registry.push({ id, n, title, group });
-  const header = head
-    ? `<header class="sec-head reveal">
-        <span class="sec-num">${pad(n)}</span>
-        ${eyebrow ? `<span class="eyebrow">${esc(eyebrow)}</span>` : ''}
-        <h2 class="sec-title">${title}</h2>
-        ${sub ? `<p class="sec-sub">${sub}</p>` : ''}
-      </header>`
-    : '';
-  return `<section id="${id}" class="sec ${cls}" data-sec="${n}" ${style ? `style="${style}"` : ''}>
-    <div class="wrap">${header}${body}</div>
-  </section>`;
-}
-
-const cards = (arr, fn, cols = 3, extra = '') =>
-  `<div class="grid g${cols} ${extra}">${arr.map((x, i) => `<div class="card tilt reveal" style="--d:${(i % 6) * 70}ms">${fn(x, i)}</div>`).join('')}</div>`;
-
-const chips = (arr) => `<div class="chips">${arr.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}</div>`;
+let B = makeBuilder();
+const sec = (o) => B.sec(o);
 
 // ---------------- HERO WORKFLOW SVG ----------------
 function heroFlow() {
@@ -60,8 +38,7 @@ function heroFlow() {
 
 // ---------------- SECTION BUILDERS ----------------
 function build() {
-  counter = 0;
-  registry.length = 0;
+  B = makeBuilder();
   const S = [];
   const P = cfg.pricing.plans;
 
@@ -197,6 +174,47 @@ function build() {
     body: `<div class="format reveal">${C.classFormat.map((f) => `<div class="fmt"><small>${esc(f.m)}</small><b>${esc(f.t)}</b><p>${esc(f.d)}</p></div>`).join('')}</div>`,
   }));
 
+  // LESSON LIBRARY
+  S.push(sec({
+    id: 'lessons', title: '25 in-depth lesson pages', eyebrow: 'Day-wise teaching guide', group: 'Learning hub',
+    sub: 'Har din ka alag page: concepts + analogies, animated workflow diagram, step-by-step build, example JSON, mistakes, quiz, teacher script, videos aur docs.',
+    body: `<div class="lesson-grid">${days.map((d, i) => `<a href="/day/${d.day}" class="card lcard reveal" style="--c:${modById[d.module].color};--d:${(i % 5) * 50}ms"><span class="lc-day">Day ${pad(d.day)}</span><h3>${esc(d.title)}</h3><small>Module ${modById[d.module].no} · ${d.tools.slice(0, 3).map(esc).join(' · ')}</small><i>Open lesson →</i></a>`).join('')}</div>`,
+  }));
+
+  // NODE TYPES
+  S.push(sec({
+    id: 'node-types', title: 'n8n mein 6 type ke nodes', eyebrow: 'Nodes basics', group: 'Learning hub',
+    body: `${cards(nodeTypes, (t) => `<div class="ic">${t.i}</div><h3>${esc(t.t)}</h3><p>${esc(t.d)}</p><div class="analogy">Example: ${esc(t.ex)}</div>`, 3)}<p class="hint reveal">Poori library (${nodes.length} nodes): <a href="/nodes">Nodes Library →</a></p>`,
+  }));
+
+  // TOP 10 NODES
+  S.push(sec({
+    id: 'top-nodes', title: 'Top 10 nodes jo har project mein lagte hain', eyebrow: 'Must master', group: 'Learning hub',
+    body: `<ol class="top10">${nodes.filter((n) => n.tier === 1).map((n, i) => `<li class="reveal" style="--d:${i * 50}ms"><b>${pad(i + 1)}</b><span>${iconFor(n.name)}</span><div><a href="/nodes#${n.id}"><h3>${esc(n.name)}</h3></a><p>${esc(n.desc)}</p></div><a href="${esc(n.docs)}" target="_blank" rel="noopener" class="b-doc">Docs ↗</a></li>`).join('')}</ol>
+      <div class="hero-cta reveal"><a href="/nodes#top-50" class="btn btn-primary">Top 50 nodes dekho →</a><a href="/nodes#cat-ai" class="btn btn-ghost">AI nodes</a></div>`,
+  }));
+
+  // DOCS HUB PREVIEW
+  S.push(sec({
+    id: 'docs-preview', title: 'n8n official docs — organized by day', eyebrow: 'Docs hub', group: 'Learning hub',
+    body: `<div class="grid g4">${hub.slice(0, 12).map((h, i) => `<a href="/docs#docs-${h.id}" class="card reveal" style="--d:${(i % 4) * 60}ms"><div class="ic">${h.i}</div><h3>${esc(h.t)}</h3><p>${esc(h.d)}</p><small class="kn">Day ${h.days.join(', ')}</small></a>`).join('')}</div>`,
+  }));
+
+  // VIDEO LIBRARY
+  const vids = [['n8n beginner full course', 1], ['n8n expressions tutorial', 4], ['n8n webhook tutorial', 8], ['n8n telegram bot', 9], ['n8n ai agent tutorial', 15], ['n8n rag chatbot', 16], ['n8n self host docker', 19], ['n8n error handling', 18]];
+  S.push(sec({
+    id: 'video-library', title: 'Video library', eyebrow: 'Watch & learn', group: 'Learning hub',
+    sub: 'Har topic ke latest YouTube tutorials + n8n ka official channel. Class ke baad revision ke liye.',
+    body: `<div class="grid g4">${vids.map(([q, d], i) => `<a class="card vcard reveal" href="${esc(yt(q))}" target="_blank" rel="noopener" style="--d:${(i % 4) * 60}ms"><div class="vthumb" style="--c:${modById[days[d - 1].module].color}"><span>▶</span></div><h3>${esc(q)}</h3><small>Day ${d} · YouTube ↗</small></a>`).join('')}</div>
+      <p class="hint reveal">Official channel: <a href="https://www.youtube.com/@n8n-io" target="_blank" rel="noopener">youtube.com/@n8n-io ↗</a></p>`,
+  }));
+
+  // TEACHER GUIDE
+  S.push(sec({
+    id: 'teach-with-site', title: 'Is website se class kaise padhayein', eyebrow: 'Instructor guide', group: 'Learning hub',
+    body: `<div class="steps-h">${[['📘', 'Lesson kholo', '/day/N par us din ka page — concepts aur analogies se shuru karo'], ['🧩', 'n8n saath mein', 'Doosre tab mein n8n kholo, "Step-by-step build" follow karo'], ['🧠', 'Quiz + practice', 'Class ke end mein quiz, practice ladder homework mein do'], ['📚', 'Docs & nodes', 'Doubt par Nodes Library ya Docs Hub ka link chat mein bhejo']].map(([i, t, d], k) => `<div class="step reveal" style="--d:${k * 90}ms"><div class="ic">${i}</div><b>${pad(k + 1)}</b><h3>${t}</h3><p>${d}</p></div>`).join('')}</div>`,
+  }));
+
   // 16-23 MODULES
   modules.forEach((m) => {
     const ds = days.filter((d) => d.module === m.id);
@@ -224,7 +242,7 @@ function build() {
       body: `<div class="day">
         <div class="day-left reveal">
           <div class="day-badge"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring-bg"/><circle cx="60" cy="60" r="52" class="ring" style="--p:${d.day / cfg.totalDays}"/></svg><div><small>DAY</small><b>${pad(d.day)}</b><small>of ${cfg.totalDays}</small></div></div>
-          <span class="sec-num">${pad(counter + 1)}</span>
+          <span class="sec-num">${pad(B.next())}</span>
           <span class="eyebrow">Module ${m.no} · ${esc(m.title)}</span>
           <h2 class="sec-title">${esc(d.title)}</h2>
           <p class="hook">“${esc(d.hook)}”</p>
@@ -241,6 +259,7 @@ function build() {
           <div class="panel lab reveal" style="--d:180ms"><h4>🛠 Live lab</h4><p>${esc(d.lab)}</p></div>
           <div class="panel reveal" style="--d:240ms"><h4>📝 Homework</h4><p>${esc(d.homework)}</p></div>
           <div class="panel reveal" style="--d:300ms"><h4>📚 Resources</h4><ul class="res">${d.resources.map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a></li>`).join('')}</ul></div>
+          <a href="/day/${d.day}" class="btn btn-primary full-lesson">📘 Full lesson kholo — Day ${d.day} →</a>
           <nav class="day-nav">${d.day > 1 ? `<a href="#day-${d.day - 1}">← Day ${d.day - 1}</a>` : '<span></span>'}${d.day < cfg.totalDays ? `<a href="#day-${d.day + 1}">Day ${d.day + 1} →</a>` : `<a href="#projects">Projects →</a>`}</nav>
         </div>
       </div>`,
@@ -559,7 +578,7 @@ function build() {
   // 99 FINAL CTA
   S.push(sec({
     id: 'final-cta', title: 'Final CTA', head: false, cls: 'final', group: 'Enroll',
-    body: `<div class="final-in reveal"><span class="eyebrow">${pad(99)} · Last step</span><h2>25 din baad aap kya ban sakte ho?<br><span class="grad">AI Automation Expert.</span></h2>
+    body: `<div class="final-in reveal"><span class="eyebrow">${pad(B.next())} · Last step</span><h2>25 din baad aap kya ban sakte ho?<br><span class="grad">AI Automation Expert.</span></h2>
       <p>Seats limited hain — ${cfg.seatsPerBatch} per batch. Agla batch shuru hone mein:</p>
       <div class="countdown" data-countdown="${cfg.nextBatchStart}">${['Days', 'Hours', 'Minutes', 'Seconds'].map((u) => `<div><b data-u="${u[0].toLowerCase()}">00</b><small>${u}</small></div>`).join('')}</div>
       <a href="#enroll" class="btn btn-primary btn-lg magnetic">Start My Automation Journey →</a></div>`,
@@ -569,7 +588,7 @@ function build() {
   S.push(sec({
     id: 'contact', title: 'Contact & footer', head: false, cls: 'footer', group: 'Enroll',
     body: `<div class="foot">
-      <div><a href="#home" class="logo"><span class="logo-mark">◆</span>${esc(cfg.brand)}</a><p>${esc(cfg.courseName)} — ${esc(cfg.tagline)}.</p><span class="sec-num">100</span></div>
+      <div>${logo()}<p>${esc(cfg.courseName)} — ${esc(cfg.tagline)}.</p><span class="sec-num">${pad(B.next())}</span></div>
       <div><h4>Course</h4><a href="#curriculum">Curriculum</a><a href="#projects">Projects</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
       <div><h4>Contact</h4><a href="tel:${esc(cfg.contact.phone.replace(/\s/g, ''))}">📞 ${esc(cfg.contact.phone)}</a><a href="mailto:${esc(cfg.contact.email)}">✉️ ${esc(cfg.contact.email)}</a><a href="https://wa.me/${esc(cfg.contact.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a><span>📍 ${esc(cfg.contact.address)}</span></div>
       <div><h4>Follow</h4>${Object.entries(cfg.social).map(([k, v]) => `<a href="${esc(v)}" target="_blank" rel="noopener">${k[0].toUpperCase() + k.slice(1)}</a>`).join('')}</div>
@@ -578,12 +597,6 @@ function build() {
   }));
 
   return S.join('\n');
-}
-
-function indexDrawer() {
-  const groups = {};
-  registry.forEach((r) => { (groups[r.group] = groups[r.group] || []).push(r); });
-  return Object.entries(groups).map(([g, items]) => `<div class="dr-g"><h5>${esc(g)}</h5>${items.map((r) => `<a href="#${r.id}"><span>${pad(r.n)}</span>${r.title.replace(/<[^>]+>/g, '')}</a>`).join('')}</div>`).join('');
 }
 
 function demoData() {
@@ -596,7 +609,7 @@ function demoData() {
 
 function render() {
   const body = build();
-  const total = registry.length;
+  const total = B.registry.length;
   const title = `${cfg.courseName} — ${cfg.totalDays}-Day Live n8n & AI Automation Course | ${cfg.brand}`;
   const desc = `${cfg.totalDays} live classes × ${cfg.hoursPerClass} hours. Learn n8n, APIs, webhooks, AI Agents, RAG, self-hosting & freelancing. 20 projects, capstone & certificate.`;
   const schema = {
@@ -605,50 +618,8 @@ function render() {
     hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'online', startDate: cfg.nextBatchStart.slice(0, 10), courseWorkload: `PT${cfg.totalDays * cfg.hoursPerClass}H` },
     offers: cfg.pricing.plans.map((p) => ({ '@type': 'Offer', name: p.name, price: p.price, priceCurrency: 'INR', category: 'Paid' })),
   };
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)}</title>
-<meta name="description" content="${esc(desc)}">
-<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:type" content="website">
-<meta name="theme-color" content="#0b0b14">
-<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/style.css">
-<script type="application/ld+json">${JSON.stringify(schema)}</script>
-</head>
-<body>
-<div id="preloader"><div class="pl-nodes"><i></i><i></i><i></i></div><small>Loading workflows…</small></div>
-<div class="progress"><span id="progressBar"></span></div>
-<canvas id="bgCanvas" aria-hidden="true"></canvas>
-<div class="cursor-glow" aria-hidden="true"></div>
-<header class="nav" id="nav">
-  <div class="wrap nav-in">
-    <a href="#home" class="logo"><span class="logo-mark">◆</span>${esc(cfg.brand)}</a>
-    <nav class="nav-links" id="navLinks">
-      <a href="#curriculum">Curriculum</a><a href="#day-1">Classes</a><a href="#projects">Projects</a><a href="#journey">Journey</a><a href="#resources">Resources</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
-    </nav>
-    <div class="nav-act">
-      <button class="btn btn-ghost sm" id="openIndex" aria-label="All sections">☰ <span class="hide-sm">All ${total} sections</span></button>
-      <a href="#enroll" class="btn btn-primary sm">Enroll</a>
-    </div>
-  </div>
-</header>
-<aside class="drawer" id="drawer" aria-hidden="true"><div class="dr-in"><div class="dr-h"><b>Course brochure · ${total} sections</b><button id="closeIndex" aria-label="Close">✕</button></div><div class="dr-body">${indexDrawer()}</div></div></aside>
-<div class="sec-indicator" id="secIndicator"><b>01</b>/<span>${total}</span></div>
-<main>
-${body}
-</main>
-<a class="wa-float" href="https://wa.me/${esc(cfg.contact.whatsapp)}?text=${encodeURIComponent('Hi, mujhe n8n course ke baare mein jaankari chahiye')}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
-<button class="to-top" id="toTop" aria-label="Back to top">↑</button>
-<div class="toast" id="toast"></div>
-<script>window.__DEMO__=${JSON.stringify(demoData())};window.__WA__=${JSON.stringify(cfg.contact.whatsapp)};</script>
-<script src="/js/main.js" defer></script>
-</body>
-</html>`;
+  return layout({ title, desc, body, total, drawerHtml: B.drawer(), active: 'home', schema, footer: false,
+    extraScript: `window.__DEMO__=${JSON.stringify(demoData())};` });
 }
 
-module.exports = { render, sectionCount: () => registry.length, registry };
+module.exports = { render, sectionCount: () => B.registry.length, registry: () => B.registry };
