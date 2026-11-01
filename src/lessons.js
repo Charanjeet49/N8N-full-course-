@@ -18,12 +18,12 @@ const L = {
     steps: [
       ['Schedule Trigger', 'Trigger Interval: Days, Hour: 8 — roz subah 8 baje'],
       ['HTTP Request', 'GET https://zenquotes.io/api/random — free quote API'],
-      ['Edit Fields (Set)', 'quote = {{ $json[0].q }}, author = {{ $json[0].a }}'],
+      ['Edit Fields (Set)', 'quote = {{ $json.q }}, author = {{ $json.a }} (n8n API ki list ko khud items mein tod deta hai)'],
       ['Gmail', 'To: apna email, Subject: "Aaj ka quote ☀️", Message: quote + author'],
     ],
     input: [{ q: 'The best way to get started is to quit talking and begin doing.', a: 'Walt Disney' }],
     output: { quote: 'The best way to get started is to quit talking and begin doing.', author: 'Walt Disney', sent: true },
-    snippet: '{{ $json[0].q }} — {{ $json[0].a }}',
+    snippet: '{{ $json.q }} — {{ $json.a }}',
     mistakes: ['Workflow ko "Active" karna bhool jaana — tab Schedule chalega hi nahi', 'Test URL aur production run mein confusion', 'Gmail credential mein galat Google account select karna'],
     tips: ['Har node ke baad "Execute step" dabake output check karo', 'Workflow ka naam clear rakho: "Daily – Quote Mailer"', 'Sticky note se workflow ka purpose likho'],
     quiz: [

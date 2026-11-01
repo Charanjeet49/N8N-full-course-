@@ -11,6 +11,8 @@ const { agendaHtml, EXAMPLES } = require('../explain');
 const { builds } = require('../buildlib');
 const { buildBlock } = require('../buildview');
 const { challenges } = require('../student');
+const { DEEP } = require('../deep');
+const { shotFor } = require('../shots');
 
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
 const nodeByName = Object.fromEntries(nodes.map((n) => [n.name.toLowerCase(), n]));
@@ -29,6 +31,7 @@ function renderLesson(n) {
   const B = makeBuilder();
   const S = [];
   const G = `Day ${n}`;
+  const D = DEEP[n];
 
   // 1 HERO
   S.push(B.sec({
@@ -55,13 +58,22 @@ function renderLesson(n) {
 
   // 2b TODAY'S BUILD
   const TB = builds()[n];
-  S.push(B.sec({ id: 'todays-build', group: G, eyebrow: "Today's build", title: `Aaj hum milke yeh banayenge`, sub: 'Ready n8n workflow: copy karo → n8n canvas par paste karo → apne accounts connect karo → chalao. Class mein peeche reh gaye to bhi yahan se seedha saath aa sakte ho.', body: `${buildBlock(TB, m.color)}${TB.prompts.length ? `<h4 class="tb-ph">💬 Is build ke prompts</h4><div class="grid g2 tb-prompts">${require('../buildview').promptCards(TB)}</div>` : ''}<p class="hint reveal">📦 Saare 25 workflows ek saath: <a href="/resources">Resources page →</a></p>` }));
+  S.push(B.sec({ id: 'todays-build', group: G, eyebrow: "Today's build", title: `Aaj hum milke yeh banayenge`, sub: 'Ready n8n workflow: copy karo → n8n canvas par paste karo → apne accounts connect karo → chalao. Class mein peeche reh gaye to bhi yahan se seedha saath aa sakte ho.', body: `${shotFor(n, 'canvas') ? `<figure class="shot reveal"><img src="${shotFor(n, 'canvas')}" alt="${esc(TB.name)} — asli n8n canvas" loading="lazy"><figcaption>📸 Asli n8n mein import karne par yeh dikhega. Laal ⚠️ = us node ka account (credential) connect karna baaki hai.</figcaption></figure>` : ''}${buildBlock(TB, m.color)}${TB.prompts.length ? `<h4 class="tb-ph">💬 Is build ke prompts</h4><div class="grid g2 tb-prompts">${require('../buildview').promptCards(TB)}</div>` : ''}<p class="hint reveal">📦 Saare 25 workflows ek saath: <a href="/resources">Resources page →</a></p>` }));
 
   // 3 OBJECTIVES (+ topic example cards)
   S.push(B.sec({ id: 'objectives', group: G, eyebrow: 'Aaj kya seekhenge', title: 'Aaj ke baad aap yeh kar paoge', sub: 'Har topic par click karo — ek real-life example aur ek n8n example.', body: `<ul class="obj obj-x">${d.topics.map((t, i) => { const [life, n8n] = E.topics[i] || []; return `<li class="reveal" style="--d:${i * 60}ms"><details><summary><b>${pad(i + 1)}</b><span>${esc(t)}</span><i class="ox-plus">+</i></summary>${life ? `<div class="ox"><p><span>🌍 Real life</span>${esc(life)}</p><p><span>⚙️ n8n mein</span>${esc(n8n)}</p></div>` : ''}</details></li>`; }).join('')}</ul>` }));
 
   // 4 CONCEPTS
   S.push(B.sec({ id: 'concepts', group: G, eyebrow: 'Core concepts', title: 'Concepts — aasaan Hinglish + real-life example', body: `<div class="grid g2">${L.concepts.map(([t, e, a], i) => `<div class="card concept reveal" style="--d:${i * 70}ms"><span class="kn">CONCEPT ${pad(i + 1)}</span><h3>${esc(t)}</h3><p>${esc(e)}</p><div class="analogy">🪄 <b>Analogy:</b> ${esc(a)}</div></div>`).join('')}</div>` }));
+
+  // 4a DEEP DIVE (Phase A)
+  if (D) S.push(B.sec({ id: 'deep-dive', group: G, eyebrow: 'Gehraai se samjho', title: '🔬 Har concept — andar se', sub: 'Upar wale concepts ka poora explanation: kya hai, n8n andar kya karta hai, kab use karein, kab nahi, example aur common galti.', body: `<div class="dd-list">${D.concepts.map((c, i) => `<details class="dd reveal" ${i === 0 ? 'open' : ''} style="--d:${i * 60}ms"><summary><span class="dd-n">${pad(i + 1)}</span><b>${esc(c.t)}</b><em>${esc(c.yaad)}</em></summary><div class="dd-b">
+      <div class="dd-p"><h5>📖 Kya hai</h5><p>${esc(c.kya)}</p></div>
+      <div class="dd-p"><h5>⚙️ Andar kaise kaam karta hai</h5><p>${esc(c.andar)}</p></div>
+      <div class="dd-2"><div class="dd-p ok"><h5>✅ Kab use karein</h5><p>${esc(c.kab)}</p></div><div class="dd-p no"><h5>⛔ Kab nahi</h5><p>${esc(c.kabNahi)}</p></div></div>
+      <div class="dd-p ex"><h5>🧪 Example</h5><p>${esc(c.ex)}</p></div>
+      <div class="dd-p bad"><h5>⚠️ Common galti + fix</h5><p>${esc(c.galti)}</p></div>
+      <p class="dd-y">🪄 <b>Yaad rakho:</b> ${esc(c.yaad)}</p></div></details>`).join('')}</div>` }));
 
   // 4b STORY TIME
   S.push(B.sec({ id: 'story', group: G, eyebrow: 'Story time', title: `Ek kahani se samjho: ${esc(E.story.t)}`, sub: 'Har scene ek n8n step hai. Pehle kahani padho, phir neeche wala workflow dekho — dono same cheez hain.', body: `<div class="story reveal" style="--c:${m.color};--n:${E.story.s.length}"><div class="st-road"><span class="st-car">${n === 1 ? '🚗' : '⚡'}</span></div><ol class="st-scenes">${E.story.s.map(([em, scene, map], i) => `<li style="--i:${i}"><span class="st-em">${em}</span><b>${esc(scene)}</b><small>= ${esc(map)}</small></li>`).join('')}</ol></div>
@@ -74,6 +86,12 @@ function renderLesson(n) {
   S.push(B.sec({ id: 'build', group: G, eyebrow: 'Hands-on', title: 'Step-by-step build (n8n kholo aur saath chalo)', body: `<ol class="build">${L.steps.map(([node, cfgTxt], i) => { const nd = findNode(node); return `<li class="reveal" style="--d:${i * 60}ms"><span class="b-num">${i + 1}</span><span class="b-ic">${iconFor(node)}</span><div><b>${nd ? `<a href="/nodes#${nd.id}">${esc(node)}</a>` : esc(node)}</b><p>${esc(cfgTxt)}</p></div>${nd ? `<a class="b-doc" href="${esc(nd.docs)}" target="_blank" rel="noopener">Docs ↗</a>` : ''}</li>`; }).join('')}</ol>
     <p class="hint reveal">✅ Har step ke baad <b>Execute step</b> dabao aur output panel check karo. Sab green ho to workflow ko <b>Active</b> karo.</p>` }));
 
+  // 6a DATA KA SAFAR + NODE ANATOMY (Phase A)
+  if (D) {
+    S.push(B.sec({ id: 'data-journey', group: G, eyebrow: 'Data ka safar', title: '🚚 Har node ke baad data kaisa dikhta hai', sub: `Aaj ke build (${esc(TB.name)}) mein data ek node se doosre mein jaate hue kaise badalta hai. n8n samajhne ki sabse badi chaabi yahi hai.`, body: `<ol class="dj">${D.trace.map(([node, note, data], i) => `<li class="reveal" style="--d:${i * 70}ms"><div class="dj-h"><span>${i + 1}</span><b>${iconFor(node)} ${esc(node)}</b></div><p>${esc(note)}</p><pre>${json(data)}</pre></li>`).join('')}</ol>` }));
+    S.push(B.sec({ id: 'node-anatomy', group: G, eyebrow: 'Node anatomy', title: '🧩 Har node ki har setting ka matlab', sub: 'Sirf hamari batayi setting nahi — har zaroori option kya karta hai, aur kab badalna hai. Isse aap khud naye workflows bana paoge.', body: `<div class="na-list">${D.nodes.map((nd, i) => { const shot = shotFor(n, 'node', i); return `<div class="na reveal" style="--d:${i * 60}ms"><div class="na-h"><span>${iconFor(nd.n)}</span><div><b>${esc(nd.n)}</b><small>${esc(nd.why)}</small></div></div><div class="${shot ? 'na-g' : ''}">${shot ? `<figure class="shot sm"><img src="${shot}" alt="${esc(nd.n)} settings" loading="lazy"><figcaption>📸 Asli n8n: ${esc(nd.n)}</figcaption></figure>` : ''}<div class="na-t"><table><thead><tr><th>Setting</th><th>Kya karti hai</th><th>Aaj ki value</th><th>Kab badlein</th></tr></thead><tbody>${nd.s.map(([a, b, c, d]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td><code>${esc(c)}</code></td><td>${esc(d)}</td></tr>`).join('')}</tbody></table></div></div></div>`; }).join('')}</div>` }));
+  }
+
   // 6b BEFORE vs AFTER
   const sum = (a) => a.reduce((x, y) => x + y[1], 0);
   const bT = sum(E.ba.before), aT = sum(E.ba.after), mx = Math.max(bT, aT, 1);
@@ -85,6 +103,9 @@ function renderLesson(n) {
 
   // 8 SNIPPET
   S.push(B.sec({ id: 'snippet', group: G, eyebrow: 'Code / expression / prompt', title: 'Aaj ka key snippet', body: `<div class="code-card reveal"><div class="cc-h"><b>⌨️ Copy karke n8n mein paste karo</b><button class="copy" data-copy="${esc(L.snippet)}">Copy</button></div><pre>${esc(L.snippet)}</pre></div>${[3, 4, 5, 6, 8, 13].includes(n) ? '<p class="hint reveal">🧪 Expression khud try karna hai? <a href="/cheatsheets#playground">Expression playground kholo →</a></p>' : ''}` }));
+
+  // 8b EXPRESSION LAB (Phase A)
+  if (D) S.push(B.sec({ id: 'expr-lab', group: G, eyebrow: 'Expression lab', title: '🧪 5 expressions — khud likh ke dekho', sub: 'Input dekho, socho kya likhoge, phir jawab kholo. Playground mein input paste karke try bhi kar sakte ho.', body: `<div class="xl">${D.lab.map(([task, input, expr, out], i) => `<div class="xl-c reveal" style="--d:${i * 50}ms"><span class="xl-n">${i + 1}</span><b>${esc(task)}</b>${Object.keys(input).length ? `<pre>${json(input)}</pre>` : '<p class="xl-e">Input ki zaroorat nahi</p>'}<details><summary>✅ Jawab dekho</summary><code>${esc(expr)}</code><p>Result: <b>${esc(out)}</b></p></details></div>`).join('')}</div><p class="hint reveal">🧪 <a href="/cheatsheets#playground">Expression playground kholo →</a></p>` }));
 
   // 9 CLASS PLAN
   S.push(B.sec({ id: 'class-plan', group: G, eyebrow: 'Aaj ki class', title: 'Aaj ki class mein kya hoga (2 ghante)', body: `<div class="panel reveal" style="--c:${m.color}"><div class="agenda-bar">${d.agenda.map((a, i) => `<span style="flex:${a[0]};--i:${i}"></span>`).join('')}</div>${agendaHtml(d)}</div>` }));

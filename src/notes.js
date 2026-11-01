@@ -11,6 +11,8 @@ const { esc, pad, iconFor } = require('./kit');
 const { agendaExplain, EXAMPLES } = require('./explain');
 const { builds } = require('./buildlib');
 const { challenges, earn, glossary } = require('./student');
+const { DEEP } = require('./deep');
+const { shotFor } = require('./shots');
 
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
 const BASE = (cfg.publicUrl || new URL(cfg.siteUrl).origin).replace(/\/$/, '');
@@ -105,10 +107,26 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
     <p class="one-line">🪄 Ek line mein: “${esc(E.concept.k.replace(/^"|"$/g, ''))}”</p>
   </section>`);
 
+  // ---------- DEEP DIVE (Phase A) ----------
+  const D = DEEP[n];
+  if (D) {
+    S.push(`<section class="pg brk" style="--c:${C}">
+    ${h2('🔬', 'Gehraai se samjho — har concept andar se', 'Kya hai, n8n andar kya karta hai, kab use karein, kab nahi, example aur common galti.')}
+    ${D.concepts.map((c, i) => `<div class="dd"><div class="dd-h"><span>${pad(i + 1)}</span><b>${esc(c.t)}</b></div>
+      <p><b class="lb">📖 Kya hai:</b> ${esc(c.kya)}</p>
+      <p><b class="lb">⚙️ Andar kaise:</b> ${esc(c.andar)}</p>
+      <div class="g2 dd-2"><div class="dd-ok"><b>✅ Kab use karein</b><p>${esc(c.kab)}</p></div><div class="dd-no"><b>⛔ Kab nahi</b><p>${esc(c.kabNahi)}</p></div></div>
+      <p class="dd-ex"><b>🧪 Example:</b> ${esc(c.ex)}</p>
+      <p class="dd-bad"><b>⚠️ Common galti:</b> ${esc(c.galti)}</p>
+      <p class="dd-y">🪄 ${esc(c.yaad)}</p></div>`).join('')}
+  </section>`);
+  }
+
   // ---------- FLOW + BUILD STEPS ----------
   S.push(`<section class="pg" style="--c:${C}">
     ${h2('🗺️', `Aaj ka workflow: ${esc(TB.name)}`, 'Data left se right chalta hai. Har dabba ek n8n node hai.')}
     ${flow(TB.flow, C)}
+    ${shotFor(n, 'canvas') ? `<figure class="shot"><img src="${shotFor(n, 'canvas')}" alt=""><figcaption>📸 Asli n8n mein import karne par yeh dikhega. Laal ⚠️ = account (credential) connect karna baaki.</figcaption></figure>` : ''}
     ${earn[n] ? box('earn', '💰 Isse kitna kama sakte ho?', `<p>${esc(earn[n][0])} — aam taur par <b>${esc(earn[n][1])}</b>. <i>(Andaaza hai; client aur scope ke hisaab se badalta hai.)</i></p>`) : ''}
     <h3 class="sh">🛠 Step-by-step build — n8n kholo aur saath chalo</h3>
     <ol class="steps">${L.steps.map(([node, t], i) => `<li><span class="st-n">${i + 1}</span><span class="st-i">${iconFor(node)}</span><div><b>${esc(node)}</b><p>${esc(t)}</p></div></li>`).join('')}</ol>
@@ -118,6 +136,18 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
       ${box('steps', '✅ Test kaise karein', `<ol class="tl">${(TB.test || []).map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`)}
     </div>
   </section>`);
+
+  // ---------- DATA KA SAFAR + NODE ANATOMY (Phase A) ----------
+  if (D) {
+    S.push(`<section class="pg brk" style="--c:${C}">
+    ${h2('🚚', 'Data ka safar — har node ke baad', `Aaj ke build mein data kaise badalta hai. Expressions samajhne ki chaabi yahi hai.`)}
+    <ol class="dj">${D.trace.map(([node, note, data], i) => `<li><div class="dj-h"><span>${i + 1}</span><b>${iconFor(node)} ${esc(node)}</b></div><p>${esc(note)}</p><pre>${esc(JSON.stringify(data, null, 2))}</pre></li>`).join('')}</ol>
+  </section>`);
+    S.push(`<section class="pg brk" style="--c:${C}">
+    ${h2('🧩', 'Node anatomy — har setting ka matlab', 'Har zaroori option kya karta hai aur kab badalna hai. Isse aap khud naye workflows bana paoge.')}
+    ${D.nodes.map((nd, i) => { const shot = shotFor(n, 'node', i); return `<div class="na"><div class="na-h"><span>${iconFor(nd.n)}</span><div><b>${esc(nd.n)}</b><small>${esc(nd.why)}</small></div></div><div class="${shot ? 'na-g' : ''}">${shot ? `<figure class="shot sm"><img src="${shot}" alt=""><figcaption>📸 Asli n8n: ${esc(nd.n)}</figcaption></figure>` : ''}<table class="nat"><thead><tr><th>Setting</th><th>Kya karti hai</th><th>Aaj ki value</th><th>Kab badlein</th></tr></thead><tbody>${nd.s.map(([a, b, c, d]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td><code>${esc(c)}</code></td><td>${esc(d)}</td></tr>`).join('')}</tbody></table></div></div>`; }).join('')}
+  </section>`);
+  }
 
   // ---------- BEFORE/AFTER + DATA + SNIPPET ----------
   const sum = (a) => a.reduce((x, y) => x + y[1], 0);
@@ -177,6 +207,14 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
     </div>
   </section>`);
 
+  // ---------- EXPRESSION PRACTICE SHEET (Phase A) ----------
+  if (D) {
+    S.push(`<section class="pg brk" style="--c:${C}">
+    ${h2('🧪', 'Expression practice sheet', 'Input dekho aur khaali jagah mein expression likho. Jawab aakhri page par hain.')}
+    <div class="xs">${D.lab.map(([task, input], i) => `<div class="xs-c"><b>${i + 1}. ${esc(task)}</b>${Object.keys(input).length ? `<pre>${esc(JSON.stringify(input))}</pre>` : '<small>Input ki zaroorat nahi</small>'}<div class="xs-w"><span>Mera jawab:</span><i></i></div></div>`).join('')}</div>
+  </section>`);
+  }
+
   // ---------- QUIZ + GLOSSARY ----------
   const G = dayGlossary(n);
   S.push(`<section class="pg" style="--c:${C}">
@@ -211,6 +249,7 @@ function dayBody(n, { mentor = false, cover = true } = {}) {
     ${h2('🔑', 'Answer key + useful links', 'Pehle khud try kiya? Ab check karo. Galat hua to explanation padho — wahi asli seekh hai.')}
     <div class="ans">${Q.map(({ opts, ans, ex }, i) => `<div><b>Q${i + 1} → ${String.fromCharCode(65 + ans)}</b><span>${esc(opts[ans])}</span><small>${esc(ex || '')}</small></div>`).join('')}</div>
     ${box('good', '✅ Challenge ka solution', `<p>${esc(sol)}</p>`)}
+    ${D ? box('steps', '🧪 Expression sheet ke jawab', `<ol class="tl">${D.lab.map(([t, , e, o]) => `<li><code>${esc(e)}</code> → <b>${esc(o)}</b></li>`).join('')}</ol>`) : ''}
     <div class="g2">
       <div><h3 class="sh">📚 Official docs</h3><ul class="links">${allDocs.map(([t, u]) => `<li><a href="${esc(u)}">${esc(t)} ↗</a></li>`).join('')}</ul>
       <h3 class="sh">▶ Videos</h3><ul class="links">${L.videos.map((q) => `<li><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(q)}">${esc(q)} ↗</a></li>`).join('')}</ul></div>
