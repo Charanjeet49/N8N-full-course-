@@ -135,6 +135,10 @@
   // ---------- Background node network ----------
   const cv = $('#bgCanvas');
   if (cv && !reduce) {
+    const hexRgb = (h) => { h = h.trim().replace('#', ''); if (h.length === 3) h = h.split('').map((c) => c + c).join(''); const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(','); };
+    const cs = getComputedStyle(document.documentElement);
+    let C1 = '106,92,255'; let C2 = '255,109,90';
+    try { C1 = hexRgb(cs.getPropertyValue('--pri2')) || C1; C2 = hexRgb(cs.getPropertyValue('--pri')) || C2; } catch { /* keep defaults */ }
     const ctx = cv.getContext('2d'); let W, H, pts; const DPR = Math.min(devicePixelRatio || 1, 2);
     const init = () => {
       W = cv.width = innerWidth * DPR; H = cv.height = innerHeight * DPR;
@@ -150,11 +154,11 @@
         if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1;
         for (let j = i + 1; j < pts.length; j++) {
           const q = pts[j]; const d = Math.hypot(p.x - q.x, p.y - q.y);
-          if (d < L) { ctx.strokeStyle = `rgba(124,92,255,${(1 - d / L) * 0.35})`; ctx.lineWidth = DPR; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+          if (d < L) { ctx.strokeStyle = `rgba(${C1},${(1 - d / L) * 0.3})`; ctx.lineWidth = DPR; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
         }
         const dm = Math.hypot(p.x - mx, p.y - my);
-        if (dm < L * 1.4) { ctx.strokeStyle = `rgba(255,109,90,${(1 - dm / (L * 1.4)) * 0.5})`; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mx, my); ctx.stroke(); }
-        ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(p.x, p.y, 1.6 * DPR, 0, 7); ctx.fill();
+        if (dm < L * 1.4) { ctx.strokeStyle = `rgba(${C2},${(1 - dm / (L * 1.4)) * 0.45})`; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mx, my); ctx.stroke(); }
+        ctx.fillStyle = `rgba(${C1},.45)`; ctx.beginPath(); ctx.arc(p.x, p.y, 1.6 * DPR, 0, 7); ctx.fill();
       }
       if (!document.hidden) requestAnimationFrame(draw); else setTimeout(() => requestAnimationFrame(draw), 500);
     };
@@ -293,4 +297,44 @@
       msg.classList.add('bad'); msg.innerHTML = `Server tak nahi pahunch paaye. <a href="https://wa.me/${window.__WA__}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" style="text-decoration:underline">WhatsApp par bhejo →</a>`;
     } finally { btn.disabled = false; btn.textContent = 'Reserve My Seat →'; }
   });
+
+  // ---------- Lesson quiz ----------
+  $$('[data-quiz]').forEach((qz) => {
+    const score = $('[data-score]', qz); const items = $$('.qz', qz); let right = 0;
+    items.forEach((q) => {
+      const ans = +q.dataset.ans;
+      $$('.opts button', q).forEach((b) => b.addEventListener('click', () => {
+        if (q.classList.contains('done')) return;
+        q.classList.add('done');
+        const k = +b.dataset.k;
+        $$('.opts button', q)[ans].classList.add('right');
+        if (k !== ans) b.classList.add('wrong'); else right++;
+        score.textContent = `Score: ${right} / ${items.length}${$$('.qz.done', qz).length === items.length ? (right === items.length ? ' — Perfect! 🎉' : ' — Lesson dobara dekho aur retry karo') : ''}`;
+      }));
+    });
+  });
+
+  // ---------- Nodes library filters ----------
+  const ns = $('#nodeSearch');
+  if (ns) {
+    let tier = 'all'; let kind = 'all';
+    const apply = () => {
+      const q = ns.value.toLowerCase().trim();
+      $$('.ncard').forEach((c) => {
+        const ok = (!q || c.dataset.name.includes(q)) && (tier === 'all' || +c.dataset.tier <= +tier) && (kind === 'all' || c.dataset.kind === kind);
+        c.classList.toggle('hide', !ok); if (ok) c.classList.add('in');
+      });
+      $$('.nodes-grid').forEach((g) => { const sec = g.closest('section'); sec.style.display = $$('.ncard:not(.hide)', g).length ? '' : 'none'; });
+    };
+    const group = (id, key, set) => $$(`#${id} button`).forEach((b) => b.addEventListener('click', () => {
+      $$(`#${id} button`).forEach((x) => x.classList.remove('active')); b.classList.add('active'); set(b.dataset[key]); apply();
+      if (ns.value || tier !== 'all' || kind !== 'all') document.querySelector('.nodes-grid')?.closest('section').scrollIntoView({ behavior: 'smooth' });
+    }));
+    group('tierFilter', 'tier', (v) => { tier = v; });
+    group('kindFilter', 'kind', (v) => { kind = v; });
+    ns.addEventListener('input', apply);
+  }
+
+  // Deep-link to a node card: reveal it immediately
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); t?.classList.add('in'); }
 })();
