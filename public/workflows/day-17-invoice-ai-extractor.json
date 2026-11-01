@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Day 17: Invoice Inbox → AI Extraction → Accounting Sheet\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- \"Invoices\" tab headers: vendor, invoice_no, invoice_date, gstin, taxable_amount, gst_amount, total, email_from, received, status\n- Agar output \"output\" ke andar aaye to Add Source mein {{ $json.output.vendor }} jaise map karo\n\nCourse: Day 17 lesson page",
+        "content": "## Day 17: Invoice Inbox → AI Extraction → Accounting Sheet\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- \"Invoices\" tab headers: vendor, invoice_no, invoice_date, gstin, taxable_amount, gst_amount, total, email_from, received, status\n\nCourse: Day 17 lesson page",
         "height": 300,
         "width": 420,
         "color": 5
@@ -100,26 +100,67 @@
           "assignments": [
             {
               "id": "5cfcd04f-f537-43a1-a9a1-45909c830826",
+              "name": "vendor",
+              "value": "={{ $json.output.vendor }}",
+              "type": "string"
+            },
+            {
+              "id": "541d177f-327c-410a-a8b2-2e8c89d2fdf0",
+              "name": "invoice_no",
+              "value": "={{ $json.output.invoice_no }}",
+              "type": "string"
+            },
+            {
+              "id": "18b47a84-f6e0-48bb-a949-610df71caca9",
+              "name": "invoice_date",
+              "value": "={{ $json.output.invoice_date }}",
+              "type": "string"
+            },
+            {
+              "id": "01b917c5-e7e7-42c3-ab1a-dc108f7d0568",
+              "name": "gstin",
+              "value": "={{ $json.output.gstin }}",
+              "type": "string"
+            },
+            {
+              "id": "9739d976-ccfe-4d8e-a6a6-5fbfe94dcb3a",
+              "name": "taxable_amount",
+              "value": "={{ $json.output.taxable_amount }}",
+              "type": "number"
+            },
+            {
+              "id": "1fe991bc-a9f1-419a-ae8d-6cf53e3380b0",
+              "name": "gst_amount",
+              "value": "={{ $json.output.gst_amount }}",
+              "type": "number"
+            },
+            {
+              "id": "ec00c734-4e59-4d29-ac54-6a1e4da6cd73",
+              "name": "total",
+              "value": "={{ $json.output.total }}",
+              "type": "number"
+            },
+            {
+              "id": "ea25edbe-467a-4281-a77f-b15e620c18ca",
               "name": "email_from",
               "value": "={{ $('Invoice Email').item.json.from.text }}",
               "type": "string"
             },
             {
-              "id": "541d177f-327c-410a-a8b2-2e8c89d2fdf0",
+              "id": "0d3cc417-2e4d-486f-ac73-d912589b7bc2",
               "name": "received",
               "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
               "type": "string"
             },
             {
-              "id": "18b47a84-f6e0-48bb-a949-610df71caca9",
+              "id": "fdd1eb68-af84-41b4-a83a-b243fe61857c",
               "name": "status",
               "value": "to verify",
               "type": "string"
             }
           ]
         },
-        "options": {},
-        "includeOtherFields": true
+        "options": {}
       },
       "id": "de158947-6a62-418f-a335-9caf21e9d356",
       "name": "Add Source",
