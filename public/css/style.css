@@ -1157,3 +1157,60 @@ html:not(.mentor-mode) .mentor-only { display: none !important; }
 .np-card b { font-size: .92rem; line-height: 1.35; flex: 1; }
 .np-card em { font-style: normal; font-weight: 700; font-size: .8rem; color: var(--c); }
 @media (max-width: 640px) { .np-book { flex-wrap: wrap; } .np-book .btn { margin-left: 0; width: 100%; justify-content: center; } }
+
+/* ============================================================
+   V9 — Deep content: deep dive, data journey, node anatomy, expression lab, screenshots
+   ============================================================ */
+.dd-list { display: grid; gap: 12px; }
+.dd { background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r); overflow: hidden; }
+.dd summary { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.dd summary::-webkit-details-marker { display: none; }
+.dd summary b { font-size: 1.08rem; }
+.dd summary em { margin-left: auto; font-style: normal; font-size: .85rem; color: var(--mut); max-width: 50%; text-align: right; }
+.dd-n { font: 800 .8rem var(--mono); color: #fff; background: var(--grad); border-radius: 9px; padding: 5px 8px; }
+.dd[open] summary { border-bottom: 1px solid var(--card-b); }
+.dd-b { padding: 18px 20px 20px; display: grid; gap: 12px; }
+.dd-p { border-radius: 14px; padding: 12px 14px; background: color-mix(in srgb, var(--pri) 4%, transparent); }
+.dd-p h5 { font-size: .9rem; margin-bottom: 4px; }
+.dd-p p { font-size: .95rem; line-height: 1.65; }
+.dd-p.ok { background: color-mix(in srgb, var(--acc) 9%, transparent); }
+.dd-p.no { background: rgba(239, 68, 68, .07); }
+.dd-p.ex { background: rgba(59, 130, 246, .07); }
+.dd-p.bad { background: rgba(245, 158, 11, .09); }
+.dd-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dd-y { font-weight: 600; padding: 10px 14px; border-left: 3px solid var(--pri); background: var(--bg); border-radius: 0 10px 10px 0; }
+.dj { list-style: none; display: grid; gap: 14px; counter-reset: dj; position: relative; }
+.dj li { min-width: 0; background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r); padding: 16px 18px; position: relative; }
+.dj li:not(:last-child)::after { content: "↓"; position: absolute; left: 30px; bottom: -19px; color: var(--pri); font-weight: 800; z-index: 1; }
+.dj-h { display: flex; align-items: center; gap: 10px; }
+.dj-h span { width: 26px; height: 26px; border-radius: 50%; background: var(--grad); color: #fff; display: grid; place-items: center; font: 800 .8rem var(--mono); }
+.dj p { margin: 8px 0; color: var(--mut); font-size: .95rem; }
+.dj pre, .xl pre { background: #15112d; color: #e9e6ff; border-radius: 12px; padding: 12px 14px; font: .8rem/1.55 var(--mono); overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.na-list { display: grid; gap: 16px; }
+.na { min-width: 0; background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r); padding: 18px; }
+.na-h { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.na-h > span { font-size: 26px; } .na-h b { font-size: 1.05rem; display: block; } .na-h small { color: var(--mut); }
+.na-t { overflow-x: auto; max-width: 100%; }
+.na-t table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 640px; }
+.na-t th { text-align: left; background: var(--bg); padding: 9px 10px; font-size: .82rem; color: var(--mut); }
+.na-t td { padding: 9px 10px; border-top: 1px solid var(--card-b); vertical-align: top; }
+.na-t code { font: .8rem var(--mono); background: color-mix(in srgb, var(--pri) 8%, transparent); padding: 2px 6px; border-radius: 6px; word-break: break-word; }
+.xl { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.xl-c { background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r); padding: 16px; position: relative; }
+.xl-n { position: absolute; top: 12px; right: 14px; font: 800 .8rem var(--mono); color: var(--pri); }
+.xl-c > b { display: block; margin-bottom: 8px; padding-right: 20px; }
+.xl-e { color: var(--mut); font-size: .88rem; }
+.xl details { margin-top: 10px; } .xl summary { cursor: pointer; font-weight: 700; color: var(--acc); }
+.xl details code { display: block; margin-top: 8px; font: .85rem var(--mono); background: var(--bg); padding: 8px 10px; border-radius: 8px; word-break: break-word; }
+.xl details p { margin-top: 6px; font-size: .9rem; }
+.shot { margin: 0 0 18px; border-radius: var(--r); overflow: hidden; border: 1px solid var(--card-b); background: #fff; box-shadow: var(--sh-sm); }
+.shot img { width: 100%; height: auto; display: block; }
+.shot figcaption { font-size: .82rem; color: var(--mut); padding: 8px 14px; border-top: 1px solid var(--card-b); }
+.shot.sm { max-width: 720px; }
+@media (max-width: 640px) { .dd-2 { grid-template-columns: 1fr; } .dd summary em { display: none; } }
+.shot img { max-height: 560px; object-fit: contain; background: #f5f5f5; }
+.build li > div { min-width: 0; overflow-wrap: anywhere; }
+.na-g { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+.na-g .shot.sm { margin: 0; } .na-g .shot.sm img { max-height: 520px; }
+.na-g .na-t table { min-width: 520px; }
+@media (max-width: 900px) { .na-g { grid-template-columns: 1fr; } .na-g .shot.sm { max-width: 360px; } }
