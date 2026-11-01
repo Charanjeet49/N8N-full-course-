@@ -219,7 +219,7 @@ module.exports = {
     ['{{ $json.email }}', 'Current item ka field'],
     ['{{ $("Webhook").item.json.body.name }}', 'Kisi aur node ka data'],
     ['{{ $now.toFormat("dd-MM-yyyy") }}', 'Aaj ki date format'],
-    ['{{ $json.name.toTitleCase() }}', 'Proper case'],
+    ['{{ $json.name.toLowerCase().toTitleCase() }}', 'Proper case (pehle lowercase)'],
     ['{{ $json.items.length }}', 'Array length'],
     ['{{ $json.price * 1.18 }}', 'GST add karna'],
     ['{{ $json.tags.join(", ") }}', 'Array → text'],

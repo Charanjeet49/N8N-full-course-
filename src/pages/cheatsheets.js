@@ -12,7 +12,7 @@ const EXPR = [
   ['Kisi aur node ka data', "{{ $('Webhook').item.json.body.email }}", 'Pichhle kisi node se'],
   ['Aaj ki date', "{{ $now.toFormat('dd LLL yyyy') }}", '01 Nov 2026'],
   ['Kal ki date', "{{ $now.plus({ days: 1 }).toFormat('yyyy-MM-dd') }}", 'Date math'],
-  ['Proper case', '{{ $json.name.toTitleCase() }}', 'rahul sharma → Rahul Sharma'],
+  ['Proper case', '{{ $json.name.toLowerCase().toTitleCase() }}', 'rAHUL SHARMA → Rahul Sharma'],
   ['Valid email?', '{{ $json.email.isEmail() }}', 'true / false'],
   ['Email ka domain', '{{ $json.email.extractDomain() }}', 'gmail.com'],
   ['Sirf digits', "{{ $json.phone.replace(/\\D/g, '') }}", '98765-43210 → 9876543210'],

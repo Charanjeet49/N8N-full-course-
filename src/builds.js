@@ -65,7 +65,7 @@ module.exports = {
     nodes: [
       ['Run Manually', B('manualTrigger'), 1, {}],
       ['Sample Messy Leads', B('code'), 2, { jsCode: "// Asli project mein yeh Google Sheet / CSV se aayega\nreturn [\n  { name: '  rahul SHARMA ', phone: '98765-43210', email: 'Rahul@Gmail.com ' },\n  { name: 'priya verma', phone: '+91 91234 56789', email: 'priya.verma@yahoo' },\n  { name: 'AMIT kumar', phone: '09812345678', email: 'amit.k@outlook.com' },\n  { name: 'neha', phone: '8800 11 2233', email: 'neha@@gmail.com' },\n].map((j) => ({ json: j }));" }],
-      ['Clean Fields', B('set'), 3.4, fields([['name', '={{ $json.name.trim().toTitleCase() }}'], ['phone', "={{ '+91' + $json.phone.replace(/\\D/g, '').slice(-10) }}"], ['email', '={{ $json.email.trim().toLowerCase() }}'], ['email_valid', '={{ $json.email.trim().isEmail() }}', 'boolean']])],
+      ['Clean Fields', B('set'), 3.4, fields([['name', '={{ $json.name.trim().toLowerCase().toTitleCase() }}'], ['phone', "={{ '+91' + $json.phone.replace(/\\D/g, '').slice(-10) }}"], ['email', '={{ $json.email.trim().toLowerCase() }}'], ['email_valid', '={{ $json.email.trim().isEmail() }}', 'boolean']])],
       ['Email Valid?', B('if'), 2.2, ifp([['={{ $json.email_valid }}', op('boolean', 'true')]])],
       ['Save Clean Leads', B('googleSheets'), 4.5, sheet('append', 'Clean Leads')],
       ['Save for Review', B('googleSheets'), 4.5, sheet('append', 'Review')],

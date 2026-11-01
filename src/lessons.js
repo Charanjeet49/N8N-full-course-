@@ -110,7 +110,7 @@ const L = {
     steps: [
       ['Manual Trigger', 'Test'],
       ['Code', 'Sample messy leads (5 items) generate'],
-      ['Edit Fields (Set)', 'name → toTitleCase, phone → +91 format, email → lowercase trim'],
+      ['Edit Fields (Set)', 'name → toLowerCase().toTitleCase(), phone → +91 format, email → lowercase trim'],
       ['IF', 'Email valid hai? {{ $json.email.isEmail() }}'],
       ['Google Sheets', 'Valid → "Clean Leads", invalid → "Review" sheet'],
     ],

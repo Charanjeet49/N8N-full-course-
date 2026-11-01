@@ -48,7 +48,7 @@
             {
               "id": "032bd660-8bcd-44fb-a9ea-595a0fbef5d9",
               "name": "name",
-              "value": "={{ $json.name.trim().toTitleCase() }}",
+              "value": "={{ $json.name.trim().toLowerCase().toTitleCase() }}",
               "type": "string"
             },
             {
