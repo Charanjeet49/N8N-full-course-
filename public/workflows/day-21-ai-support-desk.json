@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Day 21: AI Customer Support Desk (Chat + Email → Agent → Ticket)\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- Connect: Slack (OAuth / bot token)\n- Day 16 wala \"Docs Search Tool\" (vector store) copy karke is agent mein ai_tool ki tarah jodo\n- \"Tickets\" tab headers: channel, user, text, output\n- Slack mein #support channel\n\nCourse: Day 21 lesson page",
+        "content": "## Day 21: AI Customer Support Desk (Chat + Email → Agent → Ticket)\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: OpenAI API key\n- Connect: Google Sheets (Google OAuth)\n- Connect: Slack (OAuth / bot token)\n- Day 16 wala \"Docs Search Tool\" (vector store) copy karke is agent mein ai_tool ki tarah jodo\n- \"Tickets\" tab headers: channel, user, text, reason, created\n- Slack mein #support channel\n\nCourse: Day 21 lesson page",
         "height": 300,
         "width": 420,
         "color": 5
@@ -218,6 +218,53 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc776abb-5ee7-4d38-a9ac-c1a246647ff7",
+              "name": "channel",
+              "value": "={{ $('Normalize Email').isExecuted ? 'email' : 'chat' }}",
+              "type": "string"
+            },
+            {
+              "id": "343aadc5-6656-4714-aebf-1db524899760",
+              "name": "user",
+              "value": "={{ $('Normalize Email').isExecuted ? $('Normalize Email').item.json.user : $('Normalize Chat').item.json.user }}",
+              "type": "string"
+            },
+            {
+              "id": "0002da4f-665b-4e6b-aabd-06b0ded7e774",
+              "name": "text",
+              "value": "={{ $('Normalize Email').isExecuted ? $('Normalize Email').item.json.text : $('Normalize Chat').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "371c89b3-0991-429f-ad1c-c916ddb8f9ae",
+              "name": "reason",
+              "value": "={{ $json.output.replace('ESCALATE:', '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "e1ebdea5-0dbb-4790-a647-1fef185e48c7",
+              "name": "created",
+              "value": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "136913ee-e120-4145-acd0-996b5385cad4",
+      "name": "Ticket Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -242,8 +289,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1040,
-        200
+        1300,
+        100
       ]
     },
     {
@@ -262,8 +309,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
-        1300,
-        100
+        1560,
+        300
       ]
     },
     {
@@ -277,7 +324,7 @@
           },
           "conditions": [
             {
-              "id": "bc776abb-5ee7-4d38-a9ac-c1a246647ff7",
+              "id": "55e231bf-6177-4fc4-a838-6dce5c48a629",
               "leftValue": "={{ $('Normalize Email').isExecuted }}",
               "rightValue": "",
               "operator": {
@@ -321,7 +368,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "343aadc5-6656-4714-aebf-1db524899760",
+              "id": "74c11d1c-408b-40f2-a00e-eca2e52e0460",
               "name": "output",
               "value": "={{ $json.output }}",
               "type": "string"
@@ -422,7 +469,7 @@
       "main": [
         [
           {
-            "node": "Create Ticket",
+            "node": "Ticket Fields",
             "type": "main",
             "index": 0
           }
@@ -430,6 +477,17 @@
         [
           {
             "node": "Email or Chat?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Fields": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket",
             "type": "main",
             "index": 0
           }

@@ -487,7 +487,7 @@
   const pg = $('[data-playground]');
   if (pg) {
     const S = String.prototype;
-    if (!S.toTitleCase) Object.defineProperty(S, 'toTitleCase', { value() { return this.toLowerCase().replace(/(^|\s|-)\S/g, (c) => c.toUpperCase()); } });
+    if (!S.toTitleCase) Object.defineProperty(S, 'toTitleCase', { value() { return this.replace(/(^|\s|-)\S/g, (c) => c.toUpperCase()); } });
     if (!S.isEmail) Object.defineProperty(S, 'isEmail', { value() { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.trim()); } });
     if (!S.extractDomain) Object.defineProperty(S, 'extractDomain', { value() { const m = this.match(/@([^\s>]+)/) || this.match(/^(?:https?:\/\/)?([^/\s]+)/); return m ? m[1].toLowerCase() : ''; } });
     if (!S.isEmpty) Object.defineProperty(S, 'isEmpty', { value() { return this.trim().length === 0; } });

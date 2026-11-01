@@ -277,4 +277,6 @@ const DEEP = {
   },
 };
 
+Object.assign(DEEP, require("./deep2"), require("./deep3"), require("./deep4"), require("./deep5"), require("./deep6"), require("./deep7"));
+
 module.exports = { DEEP };

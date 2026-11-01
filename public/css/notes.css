@@ -252,4 +252,4 @@ kbd { font: 600 7.5pt var(--mono); background: #fff; border: 1px solid var(--lin
 .shot img { max-height: 95mm; object-fit: contain; background: #f5f5f5; } .shot.sm img { max-height: 120mm; }
 .na-g { display: grid; grid-template-columns: 50mm 1fr; gap: 4mm; align-items: start; }
 .na-g .shot.sm { width: 100%; margin: 0; } .na-g .shot.sm img { max-height: 100mm; }
-.na { break-inside: auto; } .nat tr { break-inside: avoid; }
+.na { break-inside: avoid; } .na-h { break-after: avoid; } .nat tr { break-inside: avoid; }

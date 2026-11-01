@@ -106,6 +106,7 @@
     {
       "parameters": {
         "public": true,
+        "initialMessages": "Namaste! 👋\nCourse ke documents (policy, pricing, FAQ) ke baare mein kuch bhi poochiye.",
         "options": {
           "title": "Ask our docs 📚"
         }

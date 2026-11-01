@@ -1214,3 +1214,8 @@ html:not(.mentor-mode) .mentor-only { display: none !important; }
 .na-g .shot.sm { margin: 0; } .na-g .shot.sm img { max-height: 520px; }
 .na-g .na-t table { min-width: 520px; }
 @media (max-width: 900px) { .na-g { grid-template-columns: 1fr; } .na-g .shot.sm { max-width: 360px; } }
+
+/* V10 — mobile: lambi URLs / code cards page ko chauda na karein */
+.code-card { min-width: 0; } .code-card pre { overflow-wrap: anywhere; }
+.dd-p, .dd-p p { min-width: 0; overflow-wrap: anywhere; }
+.two > * { min-width: 0; } .panel li { overflow-wrap: anywhere; }
