@@ -1,0 +1,6 @@
+node_modules/
+dist/
+data/leads.jsonl
+.env
+*.log
+.DS_Store
