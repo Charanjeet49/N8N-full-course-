@@ -1,0 +1,298 @@
+{
+  "name": "Day 09 — Telegram Appointment Booking Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 9: Telegram Appointment Booking Bot\n\n\n**Setup:**\n- Connect: Telegram bot token (BotFather se)\n- Connect: Google Calendar (Google OAuth)\n- @BotFather se naya bot banao aur token Telegram credential mein daalo\n- Workflow Active karo (Telegram trigger ko public URL chahiye)\n\nCourse: Day 9 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "99167ea0-21a5-42d0-a46f-91961a5035d5",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "59799618-c071-4ad9-a5a0-52cefe52ccf7",
+      "name": "Telegram Message",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "cc16cc81-7cad-47aa-acff-c2349921f044"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format: book YYYY-MM-DD HH:MM\nconst msg = $json.message;\nconst m = (msg.text || '').match(/book\\s+(\\d{4}-\\d{2}-\\d{2})\\s+(\\d{1,2}:\\d{2})/i);\nif (!m) return [{ json: { valid: false, chat_id: msg.chat.id } }];\nconst start = new Date(m[1] + 'T' + m[2].padStart(5, '0') + ':00+05:30');\nconst end = new Date(start.getTime() + 30 * 60000);\nreturn [{ json: { valid: true, chat_id: msg.chat.id, name: msg.from.first_name, start: start.toISOString(), end: end.toISOString(), label: m[1] + ' ' + m[2] } }];"
+      },
+      "id": "4a1cd733-8e90-4da8-a243-3aaa045190cf",
+      "name": "Parse Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0b457ed6-b67e-4744-a3bf-6178d0ab3aec",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cbd38867-b66c-4ef0-aecf-5e4a02fd72ec",
+      "name": "Format OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "id"
+        },
+        "limit": 5,
+        "options": {
+          "timeMin": "={{ $json.start }}",
+          "timeMax": "={{ $json.end }}",
+          "singleEvents": true
+        }
+      },
+      "id": "37d7579f-e5c2-4abd-adc1-13f1a849af08",
+      "name": "Check Slot",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "990b4162-e4f8-46d1-a5d0-85b511c914a9",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8f826cfb-1a6a-4bb1-a3c1-5919b5bcf77b",
+      "name": "Slot Free?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "id"
+        },
+        "start": "={{ $('Parse Request').item.json.start }}",
+        "end": "={{ $('Parse Request').item.json.end }}",
+        "additionalFields": {
+          "summary": "=Call with {{ $('Parse Request').item.json.name }} (Telegram)"
+        }
+      },
+      "id": "45907d6b-b59c-4994-a20b-110ba85f0dd9",
+      "name": "Book Meeting",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [
+        1300,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Parse Request').item.json.chat_id }}",
+        "text": "=✅ Booked! {{ $('Parse Request').item.json.label }} par aapki 30 min call pakki hai.",
+        "additionalFields": {}
+      },
+      "id": "f4e204a8-0b02-4e21-a7ca-93e72d2872e7",
+      "name": "Confirm",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Parse Request').item.json.chat_id }}",
+        "text": "=😕 Yeh slot busy hai. Koi aur time try karo.",
+        "additionalFields": {}
+      },
+      "id": "8216c191-8661-44d0-ae3d-70356a5c4388",
+      "name": "Busy Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1300,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "Booking ke liye aise likho:\nbook 2026-12-05 16:00",
+        "additionalFields": {}
+      },
+      "id": "1432e2a0-5c6f-4166-aeed-b13fb8ccb100",
+      "name": "Help Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Parse Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Request": {
+      "main": [
+        [
+          {
+            "node": "Format OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format OK?": {
+      "main": [
+        [
+          {
+            "node": "Check Slot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Help Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Slot": {
+      "main": [
+        [
+          {
+            "node": "Slot Free?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot Free?": {
+      "main": [
+        [
+          {
+            "node": "Book Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busy Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Meeting": {
+      "main": [
+        [
+          {
+            "node": "Confirm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

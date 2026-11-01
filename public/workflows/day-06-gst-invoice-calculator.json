@@ -1,0 +1,117 @@
+{
+  "name": "Day 06 — GST Invoice Calculator (Code Node)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 6: GST Invoice Calculator (Code Node)\n\n\n**Setup:**\n- Koi credential nahi chahiye\n\n\nCourse: Day 6 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "95bf8923-8186-41ae-a5b6-dabb63da769c",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "dfc60bf2-0b42-4bb5-a779-89d2c099e804",
+      "name": "Run Manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  order_id: 'ORD-1042',\n  customer: { name: 'Sneha Kapoor', state: 'Delhi', email: 'sneha@example.com' },\n  coupon: 'NEW10',\n  items: [\n    { sku: 'TSHIRT-BLK', name: 'Black T-shirt', qty: 2, price: 799, gst: 12 },\n    { sku: 'MUG-01', name: 'Coffee Mug', qty: 1, price: 349, gst: 18 },\n    { sku: 'CAP-RED', name: 'Red Cap', qty: 3, price: 299, gst: 12 }\n  ]\n} }];"
+      },
+      "id": "09ad4c20-0f17-41ca-a567-5053d9affb6b",
+      "name": "Sample Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const round = (n) => Math.round(n * 100) / 100;\nreturn $input.all().map(({ json: o }) => {\n  const discountPct = o.coupon === 'NEW10' ? 10 : 0;\n  const lines = o.items.map((it) => {\n    const base = it.qty * it.price;\n    const disc = base * discountPct / 100;\n    const taxable = base - disc;\n    const tax = taxable * it.gst / 100;\n    return { ...it, base, discount: round(disc), taxable: round(taxable), cgst: round(tax / 2), sgst: round(tax / 2), total: round(taxable + tax) };\n  });\n  const sum = (k) => round(lines.reduce((a, l) => a + l[k], 0));\n  return { json: {\n    invoice_no: 'INV-' + o.order_id.split('-')[1],\n    date: new Date().toISOString().slice(0, 10),\n    customer: o.customer,\n    lines,\n    subtotal: sum('base'), discount: sum('discount'), cgst: sum('cgst'), sgst: sum('sgst'),\n    grand_total: Math.round(sum('total'))\n  } };\n});"
+      },
+      "id": "c7ad3cba-ce34-4de4-a34c-4b7c2e2501d0",
+      "name": "Calculate Invoice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "mode": "each",
+        "options": {
+          "fileName": "={{ $json.invoice_no }}.json"
+        }
+      },
+      "id": "4291e289-e126-42d7-a8b7-cf4fec1e3176",
+      "name": "Make invoice.json",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Run Manually": {
+      "main": [
+        [
+          {
+            "node": "Sample Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Order": {
+      "main": [
+        [
+          {
+            "node": "Calculate Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Invoice": {
+      "main": [
+        [
+          {
+            "node": "Make invoice.json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

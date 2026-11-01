@@ -1,0 +1,164 @@
+{
+  "name": "Day 25 — Graduation Certificate Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 25: Graduation Certificate Generator\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Connect: Google Sheets (Google OAuth)\n- \"Alumni\" tab headers: name, email, capstone, certificate_id, date\n- Code node mein course naam / colors apne brand ke hisaab se badlo\n\nCourse: Day 25 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "f7aee719-a3c9-48c1-af16-f596ee938300",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "🎓 Claim your certificate",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "capstone_title",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "linkedin_url"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9bdaefaf-b9c4-4d73-a1cb-246bf0041ccf",
+      "name": "Graduation Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "d6fcc240-8d8a-47b3-a8a9-49c5fa8495c5"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({ json: s }) => {\n  const id = 'N8N-' + new Date().getFullYear() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();\n  const date = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });\n  const html = '<div style=\"max-width:640px;margin:auto;padding:40px;border:8px double #ff6d5a;font-family:Georgia,serif;text-align:center;background:#fffaf5\">' +\n    '<p style=\"letter-spacing:4px;color:#6a5cff\">CERTIFICATE OF COMPLETION</p>' +\n    '<h1 style=\"font-size:36px;margin:10px 0\">' + s.name + '</h1>' +\n    '<p>has successfully completed the <b>25-Day n8n & AI Automation Mastery</b> program<br>and built the capstone project</p>' +\n    '<h3 style=\"color:#ff6d5a\">“' + s.capstone_title + '”</h3>' +\n    '<p style=\"margin-top:30px;font-size:13px;color:#555\">Date: ' + date + ' · Certificate ID: ' + id + '</p></div>';\n  return { json: { ...s, certificate_id: id, date, html } };\n});"
+      },
+      "id": "e6504ca3-6873-4970-a184-4e21f906618b",
+      "name": "Build Certificate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=🎓 Congratulations {{ $json.name }} — your certificate",
+        "emailType": "html",
+        "message": "={{ $json.html }}<p style=\"text-align:center\">LinkedIn par share karo aur humein tag karo! 🚀</p>",
+        "options": {}
+      },
+      "id": "71300ecb-af1d-4306-ad5a-aebe25e01e09",
+      "name": "Email Certificate",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Alumni",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('Build Certificate').item.json.name }}",
+            "email": "={{ $('Build Certificate').item.json.email }}",
+            "capstone": "={{ $('Build Certificate').item.json.capstone_title }}",
+            "certificate_id": "={{ $('Build Certificate').item.json.certificate_id }}",
+            "date": "={{ $('Build Certificate').item.json.date }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "53fad82c-a752-445a-a798-8856befdbf0d",
+      "name": "Alumni Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Graduation Form": {
+      "main": [
+        [
+          {
+            "node": "Build Certificate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Certificate": {
+      "main": [
+        [
+          {
+            "node": "Email Certificate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Certificate": {
+      "main": [
+        [
+          {
+            "node": "Alumni Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

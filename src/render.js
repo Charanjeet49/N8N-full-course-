@@ -8,6 +8,7 @@ const { nodes, nodeTypes } = require('./nodes');
 const { hub } = require('./pages/docs');
 const { yt, iconFor } = require('./kit');
 const { agendaHtml } = require('./explain');
+const BUILDS = require('./buildlib').builds();
 
 const { esc, pad, makeBuilder, cards, chips } = require('./kit');
 const { layout, logo } = require('./layout');
@@ -255,7 +256,7 @@ function build() {
             ${agendaHtml(d)}
             <p class="tot">Total: ${total} minutes</p>
           </div>
-          <div class="panel lab reveal" style="--d:180ms"><h4>🛠 Live lab</h4><p>${esc(d.lab)}</p></div>
+          <div class="panel lab reveal" style="--d:180ms"><h4>🛠 Live lab</h4><p>${esc(d.lab)}</p><p class="lab-build">⚡ <a href="/day/${d.day}#todays-build">Ready workflow: ${esc(BUILDS[d.day].name)}</a> · <a href="${BUILDS[d.day].url}" download>JSON ⬇</a></p></div>
           <div class="panel reveal" style="--d:240ms"><h4>📝 Homework</h4><p>${esc(d.homework)}</p></div>
           <div class="panel reveal" style="--d:300ms"><h4>📚 Resources</h4><ul class="res">${d.resources.map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a></li>`).join('')}</ul></div>
           <a href="/day/${d.day}" class="btn btn-primary full-lesson">📘 Full lesson kholo — Day ${d.day} →</a>

@@ -1,0 +1,204 @@
+{
+  "name": "Day 07 — Morning Briefing Bot (Weather + News + Currency)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 7: Morning Briefing Bot (Weather + News + Currency)\n\n\n**Setup:**\n- Connect: Telegram bot token (BotFather se)\n- Apne shehar ke liye Weather URL mein latitude/longitude badlo\n\nCourse: Day 7 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "523cc206-8cde-4d2c-ae13-d3a92078686b",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "9502d9c3-2799-4998-a933-b8667f8b34dc",
+      "name": "Every Day 7 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.21&current=temperature_2m,relative_humidity_2m,wind_speed_10m&timezone=Asia%2FKolkata",
+        "options": {}
+      },
+      "id": "e6496291-50b2-4b1f-aa95-3650e67bcd30",
+      "name": "Weather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "url": "https://open.er-api.com/v6/latest/USD",
+        "options": {}
+      },
+      "id": "77705802-4d46-4318-a5af-f4aa215c0e82",
+      "name": "Currency",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "8b14d9c9-a3b5-4858-aee5-89f660325e50",
+      "name": "Top News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "id": "6a36bf12-830b-449b-ac22-f0a6e16e716c",
+      "name": "Top 3",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const w = $('Weather').first().json.current;\nconst inr = $('Currency').first().json.rates.INR;\nconst news = $input.all().map((n, i) => (i + 1) + '. ' + n.json.title).join('\\n');\nconst text = '☀️ Good morning!\\n\\n🌡 Delhi: ' + w.temperature_2m + '°C, humidity ' + w.relative_humidity_2m + '%, wind ' + w.wind_speed_10m + ' km/h\\n💱 1 USD = ₹' + inr.toFixed(2) + '\\n\\n📰 Top news:\\n' + news;\nreturn [{ json: { text } }];"
+      },
+      "id": "78a9c720-fe44-48d4-a8e4-d3d135e22d6b",
+      "name": "Build Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "1036bda0-9d2a-477c-ae66-bb4738d13a5f",
+      "name": "Send Briefing",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every Day 7 AM": {
+      "main": [
+        [
+          {
+            "node": "Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "main": [
+        [
+          {
+            "node": "Currency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Currency": {
+      "main": [
+        [
+          {
+            "node": "Top News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top News": {
+      "main": [
+        [
+          {
+            "node": "Top 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 3": {
+      "main": [
+        [
+          {
+            "node": "Build Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Message": {
+      "main": [
+        [
+          {
+            "node": "Send Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

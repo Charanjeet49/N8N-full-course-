@@ -1,0 +1,318 @@
+{
+  "name": "Day 16 — RAG Bot: Chat With Your PDFs",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 16: RAG Bot: Chat With Your PDFs\n\n\n**Setup:**\n- Connect: Google Drive (Google OAuth)\n- Connect: OpenAI API key\n- Drive par ek PDF (FAQ / policy) upload karo, uski File ID paste karo\n- In-memory store restart par khaali ho jaata hai — production mein Pinecone/Qdrant/Supabase vector store lagao (same wiring)\n\nCourse: Day 16 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "ac6d15d2-38ca-400e-ad74-54d95a16c24c",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1df98c69-e112-4022-aa96-8b85fe5a0398",
+      "name": "Load Docs (run once)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "PASTE_GOOGLE_DRIVE_FILE_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "110ed909-04e1-4ba2-a6c0-4f60d34a63eb",
+      "name": "Download PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        260,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": "course_kb"
+      },
+      "id": "e0d30f4f-1684-4bf7-a47a-b316cfd34982",
+      "name": "Insert into Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1a97408a-9320-480a-aa5d-4f8b799e98e5",
+      "name": "Embeddings (insert)",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "id": "c5f8cca8-4b7c-46d0-a26a-bac13f780b3b",
+      "name": "PDF Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        570,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "chunkSize": 800,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "e1b83529-4098-4622-a60e-730e1e07efec",
+      "name": "Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        470,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "title": "Ask our docs 📚"
+        }
+      },
+      "id": "d0c520e5-d4de-4356-aa0b-800ff7c3e69e",
+      "name": "Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "81434473-0424-48b9-a7c1-73886282d765"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Tum company ke support assistant ho. Har jawab se pehle \"company_docs\" tool se search karo. Sirf wahi bolo jo documents mein hai. Agar jawab nahi mila to bolo \"Mujhe iska pakka jawab nahi pata, main aapko team se connect karta hoon.\" Jawab ke end mein source (file/section) likho."
+        }
+      },
+      "id": "b684c0f7-bd68-4d0f-a315-4a243542e4ed",
+      "name": "Support Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        260,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "1d29cdb8-1a3e-493c-aafa-83f9dba45917",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 8
+      },
+      "id": "087553a0-dea0-4e04-a8c4-5d36c7fe70f4",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        310,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "company_docs",
+        "toolDescription": "Company ke PDFs (policies, pricing, FAQ) mein search karta hai",
+        "memoryKey": "course_kb"
+      },
+      "id": "e178b96c-8033-47b4-af12-5c76c17374fb",
+      "name": "Docs Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1,
+      "position": [
+        460,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "357cd6a6-0a5b-4ce0-af02-27d65f094bdc",
+      "name": "Embeddings (search)",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        840
+      ]
+    }
+  ],
+  "connections": {
+    "Load Docs (run once)": {
+      "main": [
+        [
+          {
+            "node": "Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Insert into Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings (insert)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert into Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert into Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "PDF Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat": {
+      "main": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Docs Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings (search)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Docs Search Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

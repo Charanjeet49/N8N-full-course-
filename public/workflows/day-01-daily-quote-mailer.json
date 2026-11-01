@@ -1,0 +1,145 @@
+{
+  "name": "Day 01 — Daily Quote Mailer",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 1: Daily Quote Mailer\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Gmail node mein \"your-email@gmail.com\" ki jagah apna email likho\n\nCourse: Day 1 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "d11c5873-50c1-43f8-a235-dad05147a240",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "0566bb83-3b32-406e-a705-1d7481ae6500",
+      "name": "Every Day 8 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://zenquotes.io/api/random",
+        "options": {}
+      },
+      "id": "43f81f1e-a5b8-47d8-a2f1-cf9c927b9641",
+      "name": "Get Random Quote",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5961bb07-bf5f-4dc3-ad0d-aab6cedc16ab",
+              "name": "quote",
+              "value": "={{ $json.q }}",
+              "type": "string"
+            },
+            {
+              "id": "11b982b8-a617-4fc6-a538-0bcd28413218",
+              "name": "author",
+              "value": "={{ $json.a }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1c57ebd3-7a32-4842-a2d7-3dbca66765ee",
+      "name": "Pick Quote + Author",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@gmail.com",
+        "subject": "=☀️ Aaj ka quote — {{ $now.format(\"dd LLL yyyy\") }}",
+        "emailType": "text",
+        "message": "=\"{{ $json.quote }}\"\n\n— {{ $json.author }}\n\nHave a great day! 🚀",
+        "options": {}
+      },
+      "id": "a65337e4-0ed7-476b-ac0d-d5ee16f93fe1",
+      "name": "Send Quote Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every Day 8 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Random Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Random Quote": {
+      "main": [
+        [
+          {
+            "node": "Pick Quote + Author",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Quote + Author": {
+      "main": [
+        [
+          {
+            "node": "Send Quote Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

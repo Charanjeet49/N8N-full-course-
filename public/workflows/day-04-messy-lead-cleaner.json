@@ -1,0 +1,239 @@
+{
+  "name": "Day 04 — Messy Lead List Cleaner",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 4: Messy Lead List Cleaner\n\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Sheet mein 2 tabs banao: \"Clean Leads\" aur \"Review\" (headers: name, phone, email, email_valid)\n\nCourse: Day 4 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "dfca3dda-c3e9-4228-a71e-8843a1a5cd41",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5cd2de86-4b14-4270-ac51-365724d0667c",
+      "name": "Run Manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Asli project mein yeh Google Sheet / CSV se aayega\nreturn [\n  { name: '  rahul SHARMA ', phone: '98765-43210', email: 'Rahul@Gmail.com ' },\n  { name: 'priya verma', phone: '+91 91234 56789', email: 'priya.verma@yahoo' },\n  { name: 'AMIT kumar', phone: '09812345678', email: 'amit.k@outlook.com' },\n  { name: 'neha', phone: '8800 11 2233', email: 'neha@@gmail.com' },\n].map((j) => ({ json: j }));"
+      },
+      "id": "a4d1d7a6-c86a-4607-abf4-aff1ab128a76",
+      "name": "Sample Messy Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "032bd660-8bcd-44fb-a9ea-595a0fbef5d9",
+              "name": "name",
+              "value": "={{ $json.name.trim().toTitleCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "8f9ea761-fa49-4f70-a5db-28ec86292de3",
+              "name": "phone",
+              "value": "={{ '+91' + $json.phone.replace(/\\D/g, '').slice(-10) }}",
+              "type": "string"
+            },
+            {
+              "id": "9488c660-02a2-45ee-a721-fce3e1e30e0f",
+              "name": "email",
+              "value": "={{ $json.email.trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "47d645fa-5997-43b3-a2f0-2adbe4bdd95e",
+              "name": "email_valid",
+              "value": "={{ $json.email.trim().isEmail() }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dc75baa5-eb3c-425a-a48e-bb47baf454bc",
+      "name": "Clean Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "39a64ce1-4d96-499b-a742-b8a4e677abc3",
+              "leftValue": "={{ $json.email_valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8d88873-c0ad-4534-a270-f2816dec5388",
+      "name": "Email Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Clean Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "c8b7f431-30a5-418f-a57e-5b5191d2061e",
+      "name": "Save Clean Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Review",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "a4b33fcf-95bb-4644-ab11-9d4aeacfa24a",
+      "name": "Save for Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Run Manually": {
+      "main": [
+        [
+          {
+            "node": "Sample Messy Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Messy Leads": {
+      "main": [
+        [
+          {
+            "node": "Clean Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Fields": {
+      "main": [
+        [
+          {
+            "node": "Email Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Valid?": {
+      "main": [
+        [
+          {
+            "node": "Save Clean Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

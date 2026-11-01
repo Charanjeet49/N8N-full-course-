@@ -1,0 +1,157 @@
+{
+  "name": "Day 03 — CSV Sales → City-wise Report Email",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 3: CSV Sales → City-wise Report Email\n\n\n**Setup:**\n- Connect: Gmail (Google OAuth)\n- Sample CSV download karo (neeche link) — columns: order_id, city, amount\n\nCourse: Day 3 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "09ceabc8-1e32-4419-a23a-b9495f5113dd",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload sales CSV",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "sales_csv",
+              "fieldType": "file",
+              "acceptFileTypes": ".csv",
+              "multipleFiles": false,
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "54359830-85ac-4152-a761-109f6338af99",
+      "name": "Upload Sales CSV",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "831f3b8e-ef96-4a97-a8c4-f021b40f273c"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "sales_csv",
+        "options": {}
+      },
+      "id": "aacca8c4-7007-4b2a-a69e-fdec24394275",
+      "name": "Read CSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Har city ka total sales + orders\nconst totals = {};\nfor (const item of $input.all()) {\n  const city = (item.json.city || 'Unknown').trim();\n  const amount = Number(item.json.amount) || 0;\n  totals[city] = totals[city] || { city, orders: 0, sales: 0 };\n  totals[city].orders += 1;\n  totals[city].sales += amount;\n}\nreturn Object.values(totals)\n  .sort((a, b) => b.sales - a.sales)\n  .map((t) => ({ json: t }));"
+      },
+      "id": "871cf75a-e7ab-44d2-a818-47aabc56d661",
+      "name": "City-wise Total",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((i) =>\n  '<tr><td>' + i.json.city + '</td><td>' + i.json.orders + '</td><td>₹' + i.json.sales.toLocaleString('en-IN') + '</td></tr>'\n).join('');\nconst grand = $input.all().reduce((a, i) => a + i.json.sales, 0);\nconst html = '<h2>City-wise Sales Report</h2><table border=\"1\" cellpadding=\"8\" style=\"border-collapse:collapse\"><tr><th>City</th><th>Orders</th><th>Sales</th></tr>' + rows + '</table><p><b>Grand total: ₹' + grand.toLocaleString('en-IN') + '</b></p>';\nreturn [{ json: { html, grand } }];"
+      },
+      "id": "2c470f08-0456-4996-af18-5cab203f446b",
+      "name": "Build HTML Table",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@gmail.com",
+        "subject": "=📊 Sales report — ₹{{ $json.grand }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "ab8d6acc-0e28-4b1f-a838-35b272b1c1aa",
+      "name": "Email Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Upload Sales CSV": {
+      "main": [
+        [
+          {
+            "node": "Read CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CSV": {
+      "main": [
+        [
+          {
+            "node": "City-wise Total",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "City-wise Total": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Table": {
+      "main": [
+        [
+          {
+            "node": "Email Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "name": "Day 22 — AI Content Engine with Telegram Approval",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 22: AI Content Engine with Telegram Approval\n\n\n**Setup:**\n- Connect: OpenAI API key\n- Connect: Telegram bot token (BotFather se)\n- Connect: LinkedIn (OAuth)\n- Connect: Google Sheets (Google OAuth)\n- RSS ko apni niche ke feed se badlo (Reddit: https://www.reddit.com/r/n8n/.rss)\n- LinkedIn credential connect karke node mein apna profile chuno\n\nCourse: Day 22 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "d526633e-f62a-4ce3-af22-d02373c734bb",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "bd897157-b82d-47f9-aeba-a6cd429e4df4",
+      "name": "Every Day 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://hnrss.org/frontpage",
+        "options": {}
+      },
+      "id": "c658d818-dfb4-48a0-a073-062f723df960",
+      "name": "Trend Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "id": "a6a11056-b8e4-4b2e-aadc-f0be48330310",
+      "name": "Top 3",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Brand voice: friendly expert, short sentences, practical, no buzzwords, Indian audience.\nExample post style:\n\"Most businesses don't need AI. They need fewer copy-paste jobs. Here's how one clinic saved 9 hours a week...\"\n\nTopic: {{ $json.title }}\nLink: {{ $json.link }}\n\nLinkedIn post likho: hook line, 3 short insights, automation/AI angle, 1 question for comments, max 150 words, 3 hashtags."
+      },
+      "id": "74e8d365-6a02-4f76-a234-459d076a5b1d",
+      "name": "Write Post",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "id": "932671fb-f37f-48f6-a24a-ef703634e569",
+      "name": "Post Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "message": "=📝 Draft post:\n\n{{ $json.text }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "id": "a1fe2771-1842-4491-a050-c3f0fb636857",
+      "name": "Ask Approval",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4d9c9fba-7ee8-40f1-aa48-277920e3dfaa",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5a17830e-d8a1-4d93-a673-5c4f3b81e42a",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "person": "YOUR_LINKEDIN_PERSON_ID",
+        "text": "={{ $('Write Post').item.json.text }}",
+        "additionalFields": {}
+      },
+      "id": "0f66dca6-2a63-4e63-a469-0dada0553874",
+      "name": "Post to LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Posts",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "b93bd074-3aa2-4300-acff-88bb818ce8bf",
+      "name": "Log Post",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1820,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every Day 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Trend Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trend Feed": {
+      "main": [
+        [
+          {
+            "node": "Top 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 3": {
+      "main": [
+        [
+          {
+            "node": "Write Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Post",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Post": {
+      "main": [
+        [
+          {
+            "node": "Ask Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Log Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

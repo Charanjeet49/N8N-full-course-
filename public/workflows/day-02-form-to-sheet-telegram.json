@@ -1,0 +1,182 @@
+{
+  "name": "Day 02 — Lead Form → Google Sheet + Telegram Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Day 2: Lead Form → Google Sheet + Telegram Alert\n\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao jisme \"Leads\" tab ho aur headers: Name, Email, Phone, Interest, submitted_at, source\n- Sheet ID (URL ke /d/ ke baad wala hissa) \"Save to Sheet\" mein paste karo\n- Telegram chat ID ke liye @userinfobot ko message karo\n\nCourse: Day 2 lesson page",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "37ce3133-4536-46ca-af23-57d40405aaba",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Free Demo Class Registration",
+        "formDescription": "Apni details bharo, hum aapko call karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Interest",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Freelancing"
+                  },
+                  {
+                    "option": "Job"
+                  },
+                  {
+                    "option": "Own business"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "013e1e19-a97a-4ff1-a642-68fbe02384df",
+      "name": "Lead Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "c0c2fe54-fc34-4b48-ac86-1c59da38fa88"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "545be7b8-5434-4e42-acf7-11216d13b59b",
+              "name": "submitted_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "237832f6-c4cd-45b1-a9b3-50d815af02a0",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "0856fd75-43df-4e7f-af75-6e7a53222abd",
+      "name": "Add Time + Source",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "f143f7be-0661-44ff-a200-5236c19cac40",
+      "name": "Save to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🔔 Naya lead!\n👤 {{ $json.Name }}\n📞 {{ $json.Phone }}\n📧 {{ $json.Email }}\n🎯 {{ $json.Interest }}",
+        "additionalFields": {}
+      },
+      "id": "9f8d4792-9f7a-4e0f-a58a-c671717ce704",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Lead Form": {
+      "main": [
+        [
+          {
+            "node": "Add Time + Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Time + Source": {
+      "main": [
+        [
+          {
+            "node": "Save to Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
