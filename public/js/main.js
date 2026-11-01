@@ -104,8 +104,17 @@
 
   // ---------- Print brochure ----------
   $$('[data-print]').forEach((b) => b.addEventListener('click', (e) => {
-    e.preventDefault(); $$('.reveal').forEach((el) => el.classList.add('in')); $$('.faq details').forEach((d) => (d.open = true));
+    e.preventDefault(); $$('.reveal').forEach((el) => el.classList.add('in')); $$('.faq details, .ag-d, .obj-x details').forEach((d) => (d.open = true));
     setTimeout(() => print(), 200);
+  }));
+
+  // ---------- Agenda explain: open/close all ----------
+  $$('[data-ag-all]').forEach((b) => b.addEventListener('click', () => {
+    const box = b.closest('.panel') || document;
+    const ds = [...box.querySelectorAll('.ag-d')];
+    const open = !ds.every((d) => d.open);
+    ds.forEach((d) => (d.open = open));
+    b.textContent = open ? '📕 Saare band karo' : '📖 Saare explain kholo';
   }));
 
   // ---------- Cursor glow, card spotlight, tilt, magnetic ----------

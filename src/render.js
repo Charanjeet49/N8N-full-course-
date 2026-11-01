@@ -7,6 +7,7 @@ const { modules, days } = require('./curriculum');
 const { nodes, nodeTypes } = require('./nodes');
 const { hub } = require('./pages/docs');
 const { yt, iconFor } = require('./kit');
+const { agendaHtml } = require('./explain');
 
 const { esc, pad, makeBuilder, cards, chips } = require('./kit');
 const { layout, logo } = require('./layout');
@@ -234,8 +235,6 @@ function build() {
   days.forEach((d) => {
     const m = modById[d.module];
     const total = d.agenda.reduce((a, x) => a + x[0], 0);
-    let acc = 0;
-    const fmt = (min) => `${Math.floor(min / 60)}:${pad(min % 60)}`;
     S.push(sec({
       id: `day-${d.day}`, group: 'Day-wise classes', cls: 'day-sec', style: `--c:${m.color}`, head: false,
       title: `Day ${d.day}: ${esc(d.title)}`,
@@ -253,7 +252,7 @@ function build() {
         <div class="day-right">
           <div class="panel reveal" style="--d:100ms"><h4>⏱ 2-hour class plan</h4>
             <div class="agenda-bar">${d.agenda.map((a, i) => `<span style="flex:${a[0]};--i:${i}" title="${esc(a[1])} (${a[0]} min)"></span>`).join('')}</div>
-            <ol class="agenda">${d.agenda.map((a) => { const s = acc; acc += a[0]; return `<li><time>${fmt(s)}–${fmt(acc)}</time><div><b>${esc(a[1])}</b>${a[2] ? `<small>${esc(a[2])}</small>` : ''}</div><em>${a[0]}m</em></li>`; }).join('')}</ol>
+            ${agendaHtml(d)}
             <p class="tot">Total: ${total} minutes</p>
           </div>
           <div class="panel lab reveal" style="--d:180ms"><h4>🛠 Live lab</h4><p>${esc(d.lab)}</p></div>

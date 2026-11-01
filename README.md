@@ -8,7 +8,7 @@ Node.js (Express) app, Hostinger Business **Node.js Web App** par directly deplo
 | Page | URL | Kya hai |
 |------|-----|---------|
 | Home / brochure | `/` | 106 sections: hero, curriculum roadmap, lesson library, node types, top 10 nodes, docs hub preview, video library, teacher guide, 8 modules, Day 1–25 summaries, projects, journey, careers, resources, pricing, FAQ, enroll form |
-| 25 lesson pages | `/day/1` … `/day/25` | Har din 17 sections: why, objectives, concepts + analogies, **animated workflow diagram**, step-by-step build (node docs links), sample input/output JSON, key snippet, 2-hour plan, teacher script, common mistakes, pro tips, lab + homework + practice ladder, **interactive quiz**, videos, docs reading list, nodes used |
+| 25 lesson pages | `/day/1` … `/day/25` | Har din 19 sections: why, objectives (har topic ka real-life + n8n example), concepts + analogies, **story time (animated kahani)**, **animated workflow diagram**, step-by-step build (node docs links), **before vs after**, sample input/output JSON, key snippet, 2-hour plan (**har block clickable: explain + examples + bachche wala script + class questions**), teacher script, common mistakes, pro tips, lab + homework + practice ladder, **interactive quiz**, videos, docs reading list, nodes used |
 | Nodes Library | `/nodes` | 6 node types, node anatomy, **Top 10 / Top 50 / Top 100+** (107 nodes) with Hinglish explanation, use case, lesson day aur official docs link; search + filters |
 | Docs Hub | `/docs` | n8n official docs ka day-wise organized map (data, code, flow logic, AI, hosting, security, API, community) |
 
