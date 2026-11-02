@@ -30,7 +30,7 @@ function siteFooter() {
   return `<footer class="site-foot"><div class="wrap">
     <div class="foot">
       <div>${logo()}<p>${esc(cfg.courseName)} — ${esc(cfg.tagline)}.</p></div>
-      <div><h4>Course</h4><a href="/#curriculum">Curriculum</a><a href="/day/1">Day-wise lessons</a><a href="/nodes">Nodes library</a><a href="/docs">Docs hub</a><a href="/setup">Day 0 setup</a><a href="/resources">Workflows &amp; prompts</a><a href="/cheatsheets">Cheat sheets</a><a href="/mentor">👨‍🏫 Student / Mentor view</a></div>
+      <div><h4>Course</h4><a href="/#curriculum">Curriculum</a><a href="/day/1">Day-wise lessons</a><a href="/nodes">Nodes library</a><a href="/docs">Docs hub</a><a href="/setup">Day 0 setup</a><a href="/resources">Workflows &amp; prompts</a><a href="/cheatsheets">Cheat sheets</a><a href="/progress">🎮 Mera progress</a><a href="/mentor">👨‍🏫 Student / Mentor view</a></div>
       <div><h4>Contact</h4><a href="tel:${esc(cfg.contact.phone.replace(/\s/g, ''))}">📞 ${esc(cfg.contact.phone)}</a><a href="mailto:${esc(cfg.contact.email)}">✉️ ${esc(cfg.contact.email)}</a><a href="https://wa.me/${esc(cfg.contact.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a></div>
       <div><h4>Enroll</h4><a href="/#pricing">Plans &amp; pricing</a><a href="/#enroll">Reserve seat</a><a href="/#faq">FAQ</a></div>
     </div>
@@ -66,13 +66,14 @@ ${schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script
     ${logo()}
     <nav class="nav-links" id="navLinks">${NAV.map(([h, t, p]) => `<a href="${h}" class="${p === active && p !== 'home' ? 'on' : ''}">${t}</a>`).join('')}</nav>
     <div class="nav-act">
+      <a href="/progress" class="xp-chip" id="xpChip" title="Mera progress: XP, level, badges"><span data-xp-icon>🐣</span><b data-xp-total>0</b><small>XP</small></a>
       <button class="btn btn-ghost sm" id="openIndex" aria-label="All sections">☰ <span class="hide-sm">${total} ${label}</span></button>
       <a href="/#enroll" class="btn btn-primary sm">Enroll</a>
     </div>
   </div>
 </header>
 <aside class="drawer" id="drawer" aria-hidden="true"><div class="dr-in"><div class="dr-h"><b>Is page par · ${total} ${label}</b><button id="closeIndex" aria-label="Close">✕</button></div>
-  <div class="dr-body"><div class="dr-g dr-pages"><h5>Pages</h5><a href="/"><span>🏠</span>Home / Brochure</a><a href="/day/1"><span>📘</span>Day-wise lessons (25)</a><a href="/nodes"><span>🧩</span>Nodes library (100)</a><a href="/docs"><span>📚</span>n8n Docs hub</a><a href="/setup"><span>🧰</span>Day 0 setup</a><a href="/resources"><span>📦</span>Workflows & prompts</a><a href="/cheatsheets"><span>📝</span>Cheat sheets + playground</a><a href="/mentor"><span>👨‍🏫</span>Student / Mentor view</a></div>${drawerHtml}</div></div></aside>
+  <div class="dr-body"><div class="dr-g dr-pages"><h5>Pages</h5><a href="/"><span>🏠</span>Home / Brochure</a><a href="/day/1"><span>📘</span>Day-wise lessons (25)</a><a href="/nodes"><span>🧩</span>Nodes library (100)</a><a href="/docs"><span>📚</span>n8n Docs hub</a><a href="/setup"><span>🧰</span>Day 0 setup</a><a href="/resources"><span>📦</span>Workflows & prompts</a><a href="/cheatsheets"><span>📝</span>Cheat sheets + playground</a><a href="/progress"><span>🎮</span>Mera progress (XP & badges)</a><a href="/mentor"><span>👨‍🏫</span>Student / Mentor view</a></div>${drawerHtml}</div></div></aside>
 <div class="sec-indicator" id="secIndicator"><b>01</b>/<span>${total}</span></div>
 <main>
 ${body}
@@ -82,6 +83,7 @@ ${footer ? siteFooter() : ''}
 <button class="to-top" id="toTop" aria-label="Back to top">↑</button>
 <div class="toast" id="toast"></div>
 <button class="mentor-pill mentor-only" data-set-mode="student" title="Student view par wapas jao">👨‍🏫 Mentor view ON · ✕ band karo</button>
+<script type="application/json" id="gameData">${JSON.stringify(require('./game').clientData()).replace(/</g, '\\u003c')}</script>
 <script type="application/json" id="glossaryData">${JSON.stringify(require('./student').glossary).replace(/</g, '\\u003c')}</script>
 <script>window.__WA__=${JSON.stringify(cfg.contact.whatsapp)};${extraScript}</script>
 <script src="/js/main.js" defer></script>

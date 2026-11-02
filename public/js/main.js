@@ -331,22 +331,6 @@
     } finally { btn.disabled = false; btn.textContent = 'Reserve My Seat →'; }
   });
 
-  // ---------- Lesson quiz ----------
-  $$('[data-quiz]').forEach((qz) => {
-    const score = $('[data-score]', qz); const items = $$('.qz', qz); let right = 0;
-    items.forEach((q) => {
-      const ans = +q.dataset.ans;
-      $$('.opts button', q).forEach((b) => b.addEventListener('click', () => {
-        if (q.classList.contains('done')) return;
-        q.classList.add('done');
-        const k = +b.dataset.k;
-        $$('.opts button', q)[ans].classList.add('right');
-        if (k !== ans) b.classList.add('wrong'); else right++;
-        score.textContent = `Score: ${right} / ${items.length}${$$('.qz.done', qz).length === items.length ? (right === items.length ? ' — Perfect! 🎉' : ' — Lesson dobara dekho aur retry karo') : ''}`;
-      }));
-    });
-  });
-
   // ---------- Nodes library filters ----------
   const ns = $('#nodeSearch');
   if (ns) {
@@ -424,8 +408,188 @@
       toast(n === 25 ? '🎓 Course complete! Bahut badhiya!' : `🎉 Shabaash! Day ${n} done — ${d.length}/25`);
     }
     lstore.set('n8n_done', d); paintProgress();
+    if (window.__game) d.includes(n) ? window.__game.award(`lesson:${n}`, window.__game.XP.lesson, `Day ${n} complete`) : window.__game.revoke(`lesson:${n}`);
   }));
   paintProgress();
+
+  // ================= V11: GAME LAYER (XP, level, badges, quiz, challenge) =================
+  (() => {
+    const gEl = $('#gameData'); if (!gEl) return;
+    const G = JSON.parse(gEl.textContent);
+    const KEYS = ['n8n_xp', 'n8n_quiz', 'n8n_done', 'n8n_streak', 'n8n_setup', 'n8n_badges', 'n8n_hints'];
+    const log = () => lstore.get('n8n_xp', {});
+    const total = (l = log()) => Object.values(l).reduce((a, b) => a + b, 0);
+    const levelOf = (xp) => { let i = 0; G.LEVELS.forEach((l, k) => { if (xp >= l.xp) i = k; }); return i; };
+    const dayKey = (d) => new Date(d).toISOString().slice(0, 10);
+    const touchStreak = () => {
+      const today = dayKey(Date.now()); const y = dayKey(Date.now() - 864e5);
+      const st = lstore.get('n8n_streak', { n: 0, last: '' });
+      if (st.last !== today) { st.n = st.last === y ? st.n + 1 : 1; st.last = today; }
+      st.best = Math.max(st.best || 0, st.n); lstore.set('n8n_streak', st);
+    };
+    const streakNow = () => { const st = lstore.get('n8n_streak', { n: 0, last: '' }); return st.last === dayKey(Date.now()) || st.last === dayKey(Date.now() - 864e5) ? st.n : 0; };
+
+    const stats = () => {
+      const l = log(); const k = Object.keys(l); const done = lstore.get('n8n_done', []);
+      return {
+        xp: total(l), done, days: done.length,
+        perfect: k.filter((x) => x.startsWith('perfect:')).length,
+        chal: k.filter((x) => x.startsWith('chal:')).length,
+        nohint: k.filter((x) => x.startsWith('chal:') && l[x] >= G.XP.challenge).length,
+        streak: Math.max(streakNow(), (lstore.get('n8n_streak', {}).best || 0)),
+        setup: l.setup !== undefined ? 1 : 0,
+      };
+    };
+    const earned = (b, s) => {
+      switch (b.type) {
+        case 'day': return s.done.includes(b.v);
+        case 'days': return s.days >= b.v;
+        case 'world': return G.WORLDS.find((w) => w.no === b.v).days.every((d) => s.done.includes(d));
+        default: return (s[b.type] || 0) >= b.v;
+      }
+    };
+
+    const pop = (html) => {
+      const el = document.createElement('div'); el.className = 'lvl-pop'; el.innerHTML = html + '<i class="cf"></i>'.repeat(14);
+      document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+      setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); }, 3200);
+      el.addEventListener('click', () => el.remove());
+    };
+    const checkBadges = (quiet) => {
+      const s = stats(); const have = lstore.get('n8n_badges', []); const fresh = [];
+      G.BADGES.forEach((b) => { if (!have.includes(b.id) && earned(b, s)) { have.push(b.id); fresh.push(b); } });
+      if (fresh.length) {
+        lstore.set('n8n_badges', have);
+        if (!quiet) setTimeout(() => pop(`<span class="lp-ic">${fresh[0].i}</span><small>Naya badge unlock!</small><b>${fresh[0].t}</b>${fresh.length > 1 ? `<em>+${fresh.length - 1} aur</em>` : ''}`), 900);
+      }
+    };
+    const paintHud = () => {
+      const xp = total(); const lv = G.LEVELS[levelOf(xp)];
+      $$('[data-xp-total]').forEach((e) => { e.textContent = xp; }); $$('[data-xp-icon]').forEach((e) => { e.textContent = lv.i; });
+      const chip = $('#xpChip'); if (chip) chip.title = `${lv.t} · ${xp} XP — mera progress dekho`;
+      paintPage();
+    };
+    const award = (key, xp, msg) => {
+      const l = log(); if (l[key] !== undefined) return false;
+      const before = levelOf(total(l)); l[key] = xp; lstore.set('n8n_xp', l); touchStreak();
+      const after = levelOf(total(l));
+      toast(`⚡ +${xp} XP · ${msg}`);
+      if (after > before) { const L = G.LEVELS[after]; setTimeout(() => pop(`<span class="lp-ic">${L.i}</span><small>Level up! 🎉</small><b>${L.t}</b>`), 500); }
+      checkBadges(); paintHud(); return true;
+    };
+    const revoke = (key) => { const l = log(); if (l[key] === undefined) return; delete l[key]; lstore.set('n8n_xp', l); paintHud(); };
+    window.__game = { award, revoke, XP: G.XP };
+
+    // ---- Quiz (pehli koshish save hoti hai; retry = sirf practice) ----
+    $$('[data-quiz]').forEach((qz) => {
+      const day = qz.dataset.quiz; const score = $('[data-score]', qz); const items = $$('.qz', qz);
+      const retry = $('[data-quiz-retry]', qz); let practice = false;
+      const saved = () => (lstore.get('n8n_quiz', {})[day] || {});
+      const mark = (q, k) => {
+        const ans = +q.dataset.ans; q.classList.add('done');
+        $$('.opts button', q)[ans].classList.add('right');
+        if (k !== ans) $$('.opts button', q)[k]?.classList.add('wrong');
+      };
+      const paintScore = () => {
+        const doneQ = $$('.qz.done', qz); const right = doneQ.filter((q) => !$('.wrong', q)).length;
+        const all = doneQ.length === items.length;
+        score.textContent = `Score: ${right} / ${items.length}${all ? (right === items.length ? ' — Perfect! 🎉' : ' — Explanation padho, phir practice karo') : ''}${practice ? ' · practice' : ''}`;
+        if (retry) retry.hidden = !all;
+      };
+      const sv = saved(); items.forEach((q, i) => { if (sv[i] !== undefined) mark(q, sv[i]); }); paintScore();
+      items.forEach((q, i) => {
+        $$('.opts button', q).forEach((b) => b.addEventListener('click', () => {
+          if (q.classList.contains('done')) return;
+          const k = +b.dataset.k; mark(q, k);
+          if (!practice) {
+            const all = lstore.get('n8n_quiz', {}); all[day] = { ...(all[day] || {}), [i]: k }; lstore.set('n8n_quiz', all);
+            if (k === +q.dataset.ans) award(`quiz:${day}:${i}`, G.XP.quiz, 'Sahi jawab!');
+            const s2 = all[day];
+            if (Object.keys(s2).length === items.length && items.every((qq, j) => s2[j] === +qq.dataset.ans)) award(`perfect:${day}`, G.XP.perfect, `Day ${day} quiz perfect 💯`);
+          }
+          paintScore();
+        }));
+      });
+      retry?.addEventListener('click', () => {
+        practice = true; items.forEach((q) => { q.classList.remove('done'); $$('.opts button', q).forEach((b) => b.classList.remove('right', 'wrong')); });
+        paintScore(); toast('🔁 Practice mode — XP pehli koshish ka hi rehta hai');
+      });
+    });
+
+    // ---- Challenge (hint kholne par XP kam) ----
+    $$('[data-chal]').forEach((c) => {
+      const day = c.dataset.chal; const btn = $('[data-chal-done]', c); const tag = $('[data-chal-xp]', c);
+      const used = () => (lstore.get('n8n_hints', {})[day] || []);
+      const worth = () => { const u = used(); return u.includes('sol') ? G.XP.solutionXp : Math.max(G.XP.solutionXp, G.XP.challenge - u.length * G.XP.hintCost); };
+      const paint = () => {
+        const got = log()[`chal:${day}`]; const u = used();
+        if (got !== undefined) { btn.textContent = `✓ Solved (+${got} XP)`; btn.disabled = true; btn.classList.replace('btn-primary', 'btn-ghost'); tag.textContent = '🧩 Shabaash!'; return; }
+        tag.textContent = u.length ? `${u.includes('sol') ? 'Solution dekha' : `${u.length} hint`} → +${worth()} XP` : `Bina hint: +${G.XP.challenge} XP`;
+      };
+      $$('details', c).forEach((dt) => dt.addEventListener('toggle', () => {
+        if (!dt.open || log()[`chal:${day}`] !== undefined) return;
+        const id = dt.hasAttribute('data-sol') ? 'sol' : dt.dataset.hint; const all = lstore.get('n8n_hints', {});
+        all[day] = [...new Set([...(all[day] || []), id])]; lstore.set('n8n_hints', all); paint();
+      }));
+      btn.addEventListener('click', () => { award(`chal:${day}`, worth(), `Day ${day} challenge solved`); paint(); });
+      paint();
+    });
+
+    // ---- /progress page ----
+    function paintPage() {
+      const card = $('[data-level-card]'); if (!card) return;
+      const s = stats(); const li = levelOf(s.xp); const L = G.LEVELS[li]; const N = G.LEVELS[li + 1];
+      $('[data-lvl-icon]').textContent = L.i; $('[data-lvl-name]').textContent = L.t;
+      $('[data-lvl-line]').textContent = L.line;
+      const pct = N ? ((s.xp - L.xp) / (N.xp - L.xp)) * 100 : 100;
+      $('[data-lvl-bar]').style.width = Math.min(100, pct) + '%';
+      $('[data-lvl-next]').textContent = N ? `${N.i} ${N.t} tak ${N.xp - s.xp} XP aur` : '🥷 Max level! Ab client projects lo.';
+      const have = lstore.get('n8n_badges', []);
+      const set = (k, v) => { const e = $(`[data-stat="${k}"]`); if (e) e.textContent = v; };
+      set('xp', s.xp); set('days', s.days); set('streak', streakNow()); set('badges', have.length);
+      $$('[data-lvl-row]').forEach((r) => r.classList.toggle('on', +r.dataset.lvlRow === L.xp));
+      const l = log();
+      $$('[data-map-day]').forEach((a) => {
+        const d = a.dataset.mapDay; const ok = s.done.includes(+d);
+        a.classList.toggle('done', ok);
+        $('[data-map-marks]', a).textContent = (l[`perfect:${d}`] !== undefined ? '⭐' : '') + (l[`chal:${d}`] !== undefined ? '🧩' : '');
+      });
+      G.WORLDS.forEach((w) => {
+        const n = w.days.filter((d) => s.done.includes(d)).length; const bar = $(`[data-world-bar="${w.no}"]`);
+        if (bar) bar.style.width = (n / w.days.length) * 100 + '%';
+        const wb = $(`[data-world-badge="${w.no}"]`); if (wb) { const ok = have.includes(`world${w.no}`); wb.textContent = ok ? '🏆' : '🔒'; wb.closest('.world').classList.toggle('cleared', ok); }
+      });
+      $$('[data-badge]').forEach((b) => b.classList.toggle('got', have.includes(b.dataset.badge)));
+    }
+    const exp = $('[data-progress-export]');
+    if (exp) {
+      exp.addEventListener('click', async () => {
+        const data = Object.fromEntries(KEYS.map((k) => [k, lstore.get(k, null)]));
+        const code = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+        try { await navigator.clipboard.writeText(code); toast('📋 Backup code copy ho gaya — WhatsApp/notes mein save kar lo'); } catch { toast('Copy nahi hua — dobara try karo'); }
+      });
+      const box = $('[data-import-box]');
+      $('[data-progress-import]').addEventListener('click', () => { box.hidden = !box.hidden; });
+      $('[data-import-go]').addEventListener('click', () => {
+        try {
+          const data = JSON.parse(decodeURIComponent(escape(atob($('textarea', box).value.trim()))));
+          KEYS.forEach((k) => { if (data[k] !== null && data[k] !== undefined) lstore.set(k, data[k]); });
+          toast('✅ Progress wapas aa gaya!'); setTimeout(() => location.reload(), 800);
+        } catch { toast('⚠️ Code sahi nahi lag raha — poora copy karke dobara paste karo'); }
+      });
+      const rs = $('[data-progress-reset]'); let armed = false;
+      rs.addEventListener('click', () => {
+        if (!armed) { armed = true; rs.textContent = 'Pakka? Dobara dabao — sab mit jaayega'; setTimeout(() => { armed = false; rs.textContent = 'Sab reset karo'; }, 4000); return; }
+        KEYS.forEach((k) => { try { localStorage.removeItem(k); } catch {} }); toast('Reset ho gaya'); setTimeout(() => location.reload(), 600);
+      });
+    }
+
+    // Purane "Day complete" ticks ka XP bhi jod do (feature se pehle wale) — chupchaap
+    const l0 = log(); let mig = false;
+    lstore.get('n8n_done', []).forEach((d) => { if (l0[`lesson:${d}`] === undefined) { l0[`lesson:${d}`] = G.XP.lesson; mig = true; } });
+    if (mig) lstore.set('n8n_xp', l0);
+    checkBadges(true); paintHud();
+  })();
 
   // ---------- Day 0 setup checklist ----------
   const meter = $('[data-setup-meter]');
@@ -441,6 +605,7 @@
       let ok = lstore.get('n8n_setup', []);
       ok = c.checked ? [...new Set([...ok, c.dataset.setupCheck])] : ok.filter((x) => x !== c.dataset.setupCheck);
       lstore.set('n8n_setup', ok); paint();
+      if (window.__game && ok.length === boxes.length) window.__game.award('setup', window.__game.XP.setup, 'Setup poora');
     }));
     paint();
   }
