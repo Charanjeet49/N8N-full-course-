@@ -1,0 +1,186 @@
+{
+  "name": "Business — Manufacturing / Distributor: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Manufacturing / Distributor: Lead Capture → Sheet + Telegram\nBusiness Track · Manufacturing / Distributor · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Orders\", pehli row mein form ke labels + order_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/distributor (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "60f88928-a195-45ab-a3d8-d270a4469623",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Bansal Agro Distributors — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Dealer name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Quantity",
+              "requiredField": false,
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Required by",
+              "requiredField": true,
+              "fieldType": "date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf4136d4-27de-4f37-a86b-9014eb399b78",
+      "name": "Manufacturing / Distributor Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "4c650cb6-fe20-4a55-af72-fa1950ca98a2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "469e909f-dd1f-4ef4-aea6-7c889c59b1f1",
+              "name": "order_id",
+              "value": "=OR-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "8e778a20-d360-406f-a81c-000806a4dadc",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "45dbe563-3ef0-4f09-a5b6-d7e4ff93d42e",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "7ec4dc3d-9444-4b14-af8c-f26800ccf29a",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "a14523b6-6b25-41f3-a773-c3ac65a61d86",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Orders",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "09c2323b-4e18-4085-a170-fc7c11419911",
+      "name": "Save to Orders",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🏭 Naya dealer order!\n🏪 {{ $json[\"Dealer name\"] }} · 📞 {{ $json.Phone }}\n📦 {{ $json.Product }} × {{ $json.Quantity }}\n🗓 Chahiye: {{ $json[\"Required by\"] }}",
+        "additionalFields": {}
+      },
+      "id": "024cec67-b660-4022-a771-1d2839bff540",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Manufacturing / Distributor Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -33,6 +33,16 @@ Files:
  - day-23-finance-ops-autopilot.json
  - day-24-ai-proposal-generator.json
  - day-25-certificate-generator.json
+ - biz-travel-lead-capture.json
+ - biz-real-estate-lead-capture.json
+ - biz-clinic-lead-capture.json
+ - biz-coaching-lead-capture.json
+ - biz-ecommerce-lead-capture.json
+ - biz-restaurant-lead-capture.json
+ - biz-gym-lead-capture.json
+ - biz-ca-finance-lead-capture.json
+ - biz-agency-lead-capture.json
+ - biz-distributor-lead-capture.json
  - sample-sales.csv
  - sample-leads-sheet.csv
  - sample-ledger.csv

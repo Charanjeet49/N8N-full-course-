@@ -255,6 +255,9 @@
       if (calc.dataset.calc === 'income') {
         const m = v.p * v.v + v.r * v.rv;
         $('#incomeOut').textContent = inr(m); $('#incomeYr').textContent = `≈ ${inr(m * 12)} per year`;
+      } else if (calc.dataset.calc === 'biz') {
+        const hrs = (v.n * v.m) / 60;
+        $('[data-biz-out]', calc).textContent = inr(hrs * v.c); $('[data-biz-hrs]', calc).textContent = `${Math.round(hrs).toLocaleString('en-IN')} ghante/mahina · ${inr(hrs * v.c * 12)} saal mein`;
       } else {
         const hrs = v.h * (v.a / 100) * 52;
         $('#roiOut').textContent = inr(hrs * v.c); $('#roiHrs').textContent = `${Math.round(hrs).toLocaleString('en-IN')} hours saved per year · ${Math.round(hrs / 8)} working days`;
@@ -438,6 +441,7 @@
         nohint: k.filter((x) => x.startsWith('chal:') && l[x] >= G.XP.challenge).length,
         streak: Math.max(streakNow(), (lstore.get('n8n_streak', {}).best || 0)),
         setup: l.setup !== undefined ? 1 : 0,
+        biz: k.filter((x) => x.startsWith('biz:')).length,
       };
     };
     const earned = (b, s) => {
@@ -534,6 +538,15 @@
       btn.addEventListener('click', () => { award(`chal:${day}`, worth(), `Day ${day} challenge solved`); paint(); });
       paint();
     });
+
+    // ---- Business Track: mission done ----
+    $$('[data-biz-done-btn]').forEach((btn) => {
+      const slug = btn.dataset.bizDoneBtn;
+      const paint = () => { if (log()[`biz:${slug}`] !== undefined) { btn.textContent = '✓ Mission complete'; btn.disabled = true; btn.classList.replace('btn-primary', 'btn-ghost'); } };
+      btn.addEventListener('click', () => { award(`biz:${slug}`, G.XP.project, 'Business mission complete'); paint(); });
+      paint();
+    });
+    $$('[data-biz-card]').forEach((c) => c.classList.toggle('done', log()[`biz:${c.dataset.bizCard}`] !== undefined));
 
     // ---- /progress page ----
     function paintPage() {

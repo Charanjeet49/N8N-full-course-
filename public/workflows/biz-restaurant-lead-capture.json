@@ -1,0 +1,207 @@
+{
+  "name": "Business — Restaurant / Cloud Kitchen: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Restaurant / Cloud Kitchen: Lead Capture → Sheet + Telegram\nBusiness Track · Restaurant / Cloud Kitchen · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Bookings\", pehli row mein form ke labels + booking_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/restaurant (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "dfc27b8a-4d7d-46e0-ade6-7a0588444645",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Tandoor Tales — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Date",
+              "requiredField": true,
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "Time",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Number of guests",
+              "requiredField": false,
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Occasion",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Normal"
+                  },
+                  {
+                    "option": "Birthday"
+                  },
+                  {
+                    "option": "Anniversary"
+                  },
+                  {
+                    "option": "Office party"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "daf59fe2-80da-471c-a93f-8cc6424d530c",
+      "name": "Restaurant / Cloud Kitchen Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "27b8b470-46b1-46b2-ab80-3d246d0d4305"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "da212fcc-0e7e-4177-ac61-c414f23e8fa5",
+              "name": "booking_id",
+              "value": "=BK-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "e190e774-462b-45fe-a971-a9ecf7546505",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "8f2fce9e-9ee8-41a3-aa47-c60648bcc5ba",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "8cee0f71-f826-419e-a884-780610530fb1",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "872443b0-3ab8-4da5-aed2-d39a8b2ea08b",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Bookings",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "0ecc2ae3-e666-4403-aa95-c3a20eb30c58",
+      "name": "Save to Bookings",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🍽️ Nayi table booking!\n👤 {{ $json.Name }} · 📞 {{ $json.Phone }}\n🗓 {{ $json.Date }} · ⏰ {{ $json.Time }}\n👥 {{ $json[\"Number of guests\"] }} log · 🎉 {{ $json.Occasion }}",
+        "additionalFields": {}
+      },
+      "id": "3d10423c-03e4-4523-a8f2-262c228007ae",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Restaurant / Cloud Kitchen Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Bookings",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

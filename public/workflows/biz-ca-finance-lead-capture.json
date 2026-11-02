@@ -1,0 +1,201 @@
+{
+  "name": "Business — CA / Finance Services: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — CA / Finance Services: Lead Capture → Sheet + Telegram\nBusiness Track · CA / Finance Services · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Clients\", pehli row mein form ke labels + client_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/ca-finance (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "01898d7f-93e8-4761-ab06-72bf1525b0c5",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Agarwal & Associates (CA firm) — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Client name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Filing type",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "GSTR-1"
+                  },
+                  {
+                    "option": "GSTR-3B"
+                  },
+                  {
+                    "option": "TDS"
+                  },
+                  {
+                    "option": "ITR"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Period (e.g. Oct 2026)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Documents link (Drive / WhatsApp)",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "21a25489-28e3-4c5b-a635-a3a925ea81a1",
+      "name": "CA / Finance Services Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "a7f445af-6909-464d-a135-17b0e5839186"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42a0b363-9508-440f-ab59-e3fc2b7d2d44",
+              "name": "client_id",
+              "value": "=C-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "8e99239b-5b77-451c-ae31-43b524ae18f6",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "811c44f2-0833-4fba-a015-7152475f31f1",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "07b70c30-9cb4-403d-a84d-3d9a822bd81a",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "fe9fae2e-1ef2-4cc0-ad5f-df08fab2fcdd",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Clients",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "562c2065-63de-4f81-ad4d-8618fdcdea47",
+      "name": "Save to Clients",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=📊 Client ne documents bheje\n🏢 {{ $json[\"Client name\"] }} · 📞 {{ $json.Phone }}\n📄 {{ $json[\"Filing type\"] }} · {{ $json[\"Period (e.g. Oct 2026)\"] }}",
+        "additionalFields": {}
+      },
+      "id": "d8b74f98-fcba-47c0-a461-ab8a501420f7",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "CA / Finance Services Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Clients",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

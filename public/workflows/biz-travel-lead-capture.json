@@ -1,0 +1,191 @@
+{
+  "name": "Business — Travel & Tours: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Travel & Tours: Lead Capture → Sheet + Telegram\nBusiness Track · Travel & Tours · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Enquiries\", pehli row mein form ke labels + enquiry_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/travel (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "349fbb57-18ad-4abf-a98f-632ab8b99bef",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Sharma Holidays — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Destination",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Travel date",
+              "requiredField": true,
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "Number of travellers",
+              "requiredField": false,
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Budget per person (₹)",
+              "requiredField": false,
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51e5f553-77bc-4f9d-aeaa-340d20907a0f",
+      "name": "Travel & Tours Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "615a55cb-0c10-40cb-aa52-153d58ca132c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b5de222a-7082-4885-ada3-74faada74f8c",
+              "name": "enquiry_id",
+              "value": "=ENQ-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "9302da86-e1e2-4319-acd0-ec0034f2fd1b",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "e450c1f3-ead0-4d82-a629-76163fa87bc3",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "bf2c17ab-2be5-4f00-a277-da10d344e50c",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "3afb547b-ee74-4996-a973-f39862817e01",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Enquiries",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "1b654ceb-e697-4c18-af88-209aa9e5ef72",
+      "name": "Save to Enquiries",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=✈️ Nayi travel enquiry!\n👤 {{ $json.Name }} · 📞 {{ $json.Phone }}\n📍 {{ $json.Destination }} · 🗓 {{ $json[\"Travel date\"] }}\n👥 {{ $json[\"Number of travellers\"] }} log · 💰 ₹{{ $json[\"Budget per person (₹)\"] }}/person",
+        "additionalFields": {}
+      },
+      "id": "6a22070c-bf98-468e-a743-f2d314082f6b",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Travel & Tours Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Enquiries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

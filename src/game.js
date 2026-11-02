@@ -12,6 +12,7 @@ const XP = {
   hintCost: 25, // har hint kholne par challenge XP kam
   solutionXp: 25, // solution dekh ke kiya to bhi kuch XP
   setup: 50, // Day 0 setup poora
+  project: 100, // Business Track: industry ka Level 1 project bana liya
 };
 
 // Level = XP ki seedhi
@@ -47,6 +48,8 @@ const BADGES = [
   { id: 'chal1', i: '🧩', t: 'Problem Solver', d: 'Pehla challenge solve kiya', type: 'chal', v: 1 },
   { id: 'nohint', i: '🦅', t: 'Bina Hint', d: 'Ek challenge bina hint ke', type: 'nohint', v: 1 },
   { id: 'chal10', i: '👑', t: 'Challenge King', d: '10 challenges solve', type: 'chal', v: 10 },
+  { id: 'biz1', i: '💼', t: 'Pehla Client Project', d: 'Business Track ka pehla Level 1 project', type: 'biz', v: 1 },
+  { id: 'biz5', i: '🏢', t: 'Industry Pro', d: '5 industries ke Level 1 projects', type: 'biz', v: 5 },
   { id: 'streak3', i: '🔥', t: '3 Din Streak', d: 'Lagataar 3 din kuch seekha', type: 'streak', v: 3 },
   { id: 'streak7', i: '☄️', t: 'Hafta Pakka', d: 'Lagataar 7 din streak', type: 'streak', v: 7 },
 ];

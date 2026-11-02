@@ -1,0 +1,198 @@
+{
+  "name": "Business — Coaching / Education: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Coaching / Education: Lead Capture → Sheet + Telegram\nBusiness Track · Coaching / Education · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Students\", pehli row mein form ke labels + student_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/coaching (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "3931fabe-4c63-40b0-a0b7-6f8fa948f745",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Bright Future Academy — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Student name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Parent phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Class / course",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Class 10"
+                  },
+                  {
+                    "option": "Class 11"
+                  },
+                  {
+                    "option": "Class 12"
+                  },
+                  {
+                    "option": "Competitive exam"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Preferred demo date",
+              "requiredField": true,
+              "fieldType": "date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95da5ca6-7d6e-4c71-ad8d-d5a590d3d38f",
+      "name": "Coaching / Education Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "7e48e263-cffd-4c51-a96f-f9a74e0ef949"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36cfaec4-b9f8-40ca-a3b6-c328f09dd299",
+              "name": "student_id",
+              "value": "=ST-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "cce3bc02-cac7-4294-a661-7cd404560273",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "6b6dcbc2-ca7f-4df5-ae14-be705853e9fd",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "788fbfc1-7066-42e4-a88f-ce77fbca59ff",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "4baadaae-c19a-43ee-a53d-fffba3927535",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Students",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "e4b58497-02fe-4b6b-ad5d-34f69c9b9faa",
+      "name": "Save to Students",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🎓 Naya demo class lead\n👤 {{ $json[\"Student name\"] }} · 📞 {{ $json[\"Parent phone\"] }}\n📚 {{ $json[\"Class / course\"] }} · 🗓 {{ $json[\"Preferred demo date\"] }}",
+        "additionalFields": {}
+      },
+      "id": "1e3cd5d9-0cde-4d22-ab90-7da3955df929",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Coaching / Education Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Students",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

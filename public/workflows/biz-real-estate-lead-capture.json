@@ -1,0 +1,223 @@
+{
+  "name": "Business — Real Estate: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Real Estate: Lead Capture → Sheet + Telegram\nBusiness Track · Real Estate · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Leads\", pehli row mein form ke labels + lead_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/real-estate (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "1ef4af59-ad78-4ced-a48a-1c861f0f555c",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Gupta Realty — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Preferred location",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "BHK",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "1 BHK"
+                  },
+                  {
+                    "option": "2 BHK"
+                  },
+                  {
+                    "option": "3 BHK"
+                  },
+                  {
+                    "option": "4+ BHK"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Budget (₹ lakh)",
+              "requiredField": false,
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Buying timeline",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Turant"
+                  },
+                  {
+                    "option": "3 mahine"
+                  },
+                  {
+                    "option": "6 mahine"
+                  },
+                  {
+                    "option": "Sirf dekh rahe hain"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "db0f83fb-5e6a-4fb7-aebb-7d4efffdf5b2",
+      "name": "Real Estate Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "22bc923e-510b-4a74-ab1e-0f4ae943d8a6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8aa7f12a-ba14-4e6c-a06d-584ef34620ec",
+              "name": "lead_id",
+              "value": "=L-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "85cb31bf-041c-4878-a1c8-da15d236ff8c",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "b9455c40-bb16-4a58-a4cb-cddca131b31d",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "5c22f4d0-ecb3-4e75-a318-1de063e19031",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "a584d5b0-265e-482e-a7d1-849019ea20e7",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "39e2ba6c-d540-44fe-a122-d1596ef34b68",
+      "name": "Save to Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🏠 Naya property lead!\n👤 {{ $json.Name }} · 📞 {{ $json.Phone }}\n📍 {{ $json[\"Preferred location\"] }} · {{ $json.BHK }}\n💰 ₹{{ $json[\"Budget (₹ lakh)\"] }} lakh · ⏱ {{ $json[\"Buying timeline\"] }}",
+        "additionalFields": {}
+      },
+      "id": "908fdcf3-e72e-4cea-a739-cd44089a65ee",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Real Estate Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Leads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

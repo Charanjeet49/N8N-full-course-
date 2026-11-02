@@ -1,0 +1,196 @@
+{
+  "name": "Business — E-commerce / D2C: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — E-commerce / D2C: Lead Capture → Sheet + Telegram\nBusiness Track · E-commerce / D2C · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Orders\", pehli row mein form ke labels + order_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/ecommerce (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "54182be3-0696-453f-aafe-e24f0693c4c4",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "DesiCraft (handmade decor brand) — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Customer name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Order amount (₹)",
+              "requiredField": false,
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Payment mode",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "COD"
+                  },
+                  {
+                    "option": "Prepaid"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "City",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0a34574d-88d6-43fe-ad3f-0004f41d8f5b",
+      "name": "E-commerce / D2C Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "0fbfe22b-0ba4-4388-abad-1986961fbbe2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e169569-2b74-4bc2-a01a-7d27c2649ec3",
+              "name": "order_id",
+              "value": "=#1458-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "4466c03d-50ea-4a2d-aa7b-e0ed4c87d4a5",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "9677a428-0b4a-4ffe-ae38-c4ab0587c2d1",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "84880cbc-105d-4106-ac93-76561f9474a3",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "b4ef1e69-0afa-47be-a47e-af6b8f784855",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Orders",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "007cbcb6-a48c-4417-a90f-4f2cf4853178",
+      "name": "Save to Orders",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🛒 Naya order!\n👤 {{ $json[\"Customer name\"] }} · 📞 {{ $json.Phone }}\n💰 ₹{{ $json[\"Order amount (₹)\"] }} · {{ $json[\"Payment mode\"] }}\n📍 {{ $json.City }}",
+        "additionalFields": {}
+      },
+      "id": "5706ef27-3ae0-4143-a0b4-0db0fa1d6779",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "E-commerce / D2C Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
