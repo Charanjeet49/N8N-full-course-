@@ -442,6 +442,9 @@
         streak: Math.max(streakNow(), (lstore.get('n8n_streak', {}).best || 0)),
         setup: l.setup !== undefined ? 1 : 0,
         biz: k.filter((x) => x.startsWith('biz:')).length,
+        bug: k.filter((x) => x.startsWith('bug:')).length,
+        flow: k.filter((x) => x.startsWith('flow:')).length,
+        arena: k.filter((x) => x.startsWith('arena:')).length,
       };
     };
     const earned = (b, s) => {
@@ -538,6 +541,74 @@
       btn.addEventListener('click', () => { award(`chal:${day}`, worth(), `Day ${day} challenge solved`); paint(); });
       paint();
     });
+
+    // ---- Bug Hunt ----
+    $$('[data-bug]').forEach((g) => {
+      const day = g.dataset.bug; const ans = +g.dataset.ans; const btns = $$('.opts button', g); const retry = $('[data-game-retry]', g);
+      btns.forEach((b) => b.addEventListener('click', () => {
+        if (g.classList.contains('done')) return;
+        g.classList.add('done'); btns[ans].classList.add('right');
+        if (+b.dataset.k !== ans) { b.classList.add('wrong'); retry.hidden = false; toast('🐞 Galti pakadna mushkil hai — fix padho, phir dobara'); }
+        else award(`bug:${day}`, G.XP.game, 'Bug pakad liya! 🐞');
+      }));
+      retry.addEventListener('click', () => { g.classList.remove('done'); btns.forEach((b) => b.classList.remove('right', 'wrong')); retry.hidden = true; });
+      if (log()[`bug:${day}`] !== undefined) { g.classList.add('done'); btns[ans].classList.add('right'); }
+    });
+
+    // ---- Flow Builder (tap karke order) ----
+    $$('[data-flow]').forEach((g) => {
+      const day = g.dataset.flow; const chips = $$('.fb-chip', g); const line = $('[data-fb-line]', g); const msg = $('[data-fb-msg]', g);
+      let next = 0;
+      const reset = () => { next = 0; line.innerHTML = ''; chips.forEach((c) => { c.disabled = false; c.classList.remove('used', 'shake'); }); g.classList.remove('won'); msg.textContent = 'Tap karke order banao. Galat tap = shuru se.'; };
+      const win = () => { g.classList.add('won'); msg.textContent = '🎉 Perfect! Data isi order mein node se node jaata hai.'; };
+      chips.forEach((c) => c.addEventListener('click', () => {
+        if (g.classList.contains('won')) return;
+        if (+c.dataset.step === next) {
+          const li = document.createElement('li'); li.innerHTML = c.innerHTML; line.appendChild(li);
+          c.disabled = true; c.classList.add('used'); next++;
+          if (next === chips.length) { win(); award(`flow:${day}`, G.XP.game, 'Flow sahi banaya! 🧩'); }
+        } else { c.classList.add('shake'); msg.textContent = `❌ "${c.querySelector('b').textContent}" abhi nahi aata. Socho: data pehle kahan se aata hai?`; setTimeout(reset, 900); }
+      }));
+      $('[data-fb-reset]', g).addEventListener('click', reset);
+      if (log()[`flow:${day}`] !== undefined) { chips.slice().sort((a, b) => a.dataset.step - b.dataset.step).forEach((c) => { const li = document.createElement('li'); li.innerHTML = c.innerHTML; line.appendChild(li); c.disabled = true; c.classList.add('used'); }); next = chips.length; win(); }
+    });
+
+    // ---- Revision Arena ----
+    const ar = $('[data-arena]');
+    if (ar) {
+      const bank = JSON.parse($('#arenaBank').textContent); const ROUND = 10;
+      const el = (k) => $(`[data-ar-${k}]`, ar);
+      let qs = [], i = 0, right = 0;
+      const today = new Date().toISOString().slice(0, 10);
+      const pickQs = () => {
+        const done = lstore.get('n8n_done', []); const pool = done.length >= 2 ? bank.filter((q) => done.includes(q.d)) : bank;
+        return [...pool].sort(() => Math.random() - 0.5).slice(0, ROUND);
+      };
+      const show = () => {
+        const q = qs[i]; const order = q.o.map((_, k) => k).sort(() => Math.random() - 0.5);
+        el('count').textContent = `Sawaal ${i + 1} / ${qs.length}`; el('day').textContent = `Day ${q.d}`; el('score').textContent = `Score: ${right}`;
+        el('bar').style.width = `${(i / qs.length) * 100}%`; el('q').textContent = q.q; el('ex').textContent = ''; el('next').hidden = true;
+        const box = el('opts'); box.innerHTML = '';
+        order.forEach((k, j) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = `${String.fromCharCode(65 + j)}. ${q.o[k]}`; b.dataset.k = k; box.appendChild(b); });
+        $$('button', box).forEach((b) => b.addEventListener('click', () => {
+          if (box.classList.contains('done')) return; box.classList.add('done');
+          $$('button', box).find((x) => +x.dataset.k === q.a).classList.add('right');
+          if (+b.dataset.k === q.a) right++; else b.classList.add('wrong');
+          el('score').textContent = `Score: ${right}`; el('ex').textContent = q.ex ? `💡 ${q.ex}` : '';
+          el('next').hidden = false; el('next').textContent = i === qs.length - 1 ? '🏁 Result dekho' : 'Agla sawaal →';
+        }));
+        box.classList.remove('done');
+      };
+      const finish = () => {
+        el('bar').style.width = '100%'; el('opts').innerHTML = ''; el('next').hidden = true; el('day').textContent = '';
+        el('q').textContent = right === qs.length ? `🏆 ${right}/${qs.length} — Perfect! Aap champion ho.` : right >= qs.length * 0.7 ? `🎉 ${right}/${qs.length} — Bahut badhiya!` : `💪 ${right}/${qs.length} — Galat wale din dobara dekh lo, phir ek round aur.`;
+        const got = right ? award(`arena:${today}`, right * G.XP.arena, `Arena round: ${right}/${qs.length}`) : false;
+        el('ex').textContent = got || !right ? '' : 'Aaj ka XP pehle round mein mil chuka — yeh practice round tha.';
+        el('start').hidden = false; el('start').textContent = '🔁 Naya round';
+      };
+      el('start').addEventListener('click', () => { qs = pickQs(); i = 0; right = 0; el('start').hidden = true; show(); });
+      el('next').addEventListener('click', () => { i++; i < qs.length ? show() : finish(); });
+    }
 
     // ---- Business Track: mission done ----
     $$('[data-biz-done-btn]').forEach((btn) => {
@@ -688,6 +759,20 @@
     ta.addEventListener('input', run); inp.addEventListener('input', run);
     pg.querySelectorAll('[data-pg-try]').forEach((b) => b.addEventListener('click', () => { inp.value = b.dataset.pgTry; run(); }));
     run();
+  }
+
+  // ---------- Library filter ----------
+  const libS = $('[data-lib-search]');
+  if (libS) {
+    let type = 'all', mod = 'all'; const items = $$('.lib-i'); const cnt = $('[data-lib-count]');
+    const apply = () => {
+      const q = libS.value.toLowerCase().trim(); let n = 0;
+      items.forEach((it) => { const ok = (type === 'all' || it.dataset.type === type) && (mod === 'all' || it.dataset.mod === mod) && (!q || it.dataset.text.includes(q)); it.hidden = !ok; if (ok) n++; });
+      cnt.textContent = `${n} resources dikh rahe hain`;
+    };
+    const grp = (sel, set) => $$(`${sel} button`).forEach((b) => b.addEventListener('click', () => { $$(`${sel} button`).forEach((x) => x.classList.remove('active')); b.classList.add('active'); set(b.dataset.v); apply(); }));
+    grp('[data-lib-type]', (v) => { type = v; }); grp('[data-lib-mod]', (v) => { mod = v; });
+    libS.addEventListener('input', apply); apply();
   }
 
   // Deep-link to a node card: reveal it immediately

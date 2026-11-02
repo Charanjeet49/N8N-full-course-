@@ -14,6 +14,10 @@ const { challenges } = require('../student');
 const { DEEP } = require('../deep');
 const { shotFor } = require('../shots');
 const { BONUS_Q, XP } = require('../game');
+const { BUGS, READ } = require('../games');
+
+// deterministic shuffle (same day = same order)
+const shuffleIdx = (len, seed) => { const a = [...Array(len).keys()]; let x = seed * 9301 + 49297; for (let i = len - 1; i > 0; i--) { x = (x * 9301 + 49297) % 233280; const j = Math.floor((x / 233280) * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } if (a.every((v, i) => v === i) && len > 1) [a[0], a[1]] = [a[1], a[0]]; return a; };
 
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
 const nodeByName = Object.fromEntries(nodes.map((n) => [n.name.toLowerCase(), n]));
@@ -53,6 +57,11 @@ function renderLesson(n) {
       </div>
       <div class="day-dots reveal">${days.map((x) => `<a href="/day/${x.day}" class="${x.day === n ? 'on' : ''}" style="--c:${modById[x.module].color}" title="Day ${x.day}: ${esc(x.title)}">${x.day}</a>`).join('')}</div>`,
   }));
+
+  // 1b 5 MINUTE MEIN SAMJHO + PEHLE YAAD KARO
+  const quick = D ? D.concepts.slice(0, 4).map((c) => [c.t, c.yaad]) : L.concepts.slice(0, 4).map(([t, , a]) => [t, a]);
+  const prevQ = n > 1 ? LESSONS[n - 1].quiz.slice(0, 2) : [];
+  S.push(B.sec({ id: 'quick', group: G, eyebrow: '5 minute mein samjho', title: '⚡ Aaj ka din — 5 minute mein', sub: 'Jaldi mein ho? Sirf yeh padh lo. Poora lesson neeche hai.', body: `<div class="grid ${prevQ.length ? 'g2' : ''} quick-g"><div class="panel quick reveal" style="--c:${m.color}"><h4>🧠 Aaj ki ${quick.length} baatein</h4><ol class="quick-l">${quick.map(([t, y]) => `<li><b>${esc(t)}</b><span>${esc(y)}</span></li>`).join('')}</ol></div>${prevQ.length ? `<div class="panel recall reveal"><h4>🔁 Pehle yaad karo — Day ${n - 1}</h4><p class="recall-p">Kal ka 2 sawaal. Pehle dimaag mein jawab socho, phir kholo — isse yaad pakki hoti hai.</p>${prevQ.map(([q, o, a, ex]) => `<details class="rc"><summary>${esc(q)}</summary><p>✅ <b>${esc(o[a])}</b>${ex ? ` — ${esc(ex)}` : ''}</p></details>`).join('')}</div>` : ''}</div>` }));
 
   // 2 WHY
   S.push(B.sec({ id: 'why', group: G, eyebrow: 'Kyun zaroori hai', title: 'Aaj ka lesson kyun matter karta hai?', body: `<div class="why-box reveal"><span>💡</span><p>${esc(L.why)}</p></div>` }));
@@ -137,6 +146,17 @@ function renderLesson(n) {
       <div class="chl-steps"><details class="chl-h" data-hint="1"><summary>💡 Hint 1 <small>−${XP.hintCost} XP</small></summary><p>${esc(h1)}</p></details><details class="chl-h" data-hint="2"><summary>💡 Hint 2 <small>−${XP.hintCost} XP</small></summary><p>${esc(h2)}</p></details><details class="chl-h sol" data-sol><summary>✅ Solution dekho</summary><p>${esc(sol)}</p></details></div>
       <div class="chl-done"><button type="button" class="btn btn-primary sm" data-chal-done="${n}">🏁 Maine solve kar liya</button><span class="xp-tag" data-chal-xp>Bina hint: +${XP.challenge} XP</span></div></div>` }));
 
+  // 13c MINI GAMES (Bug Hunt + Flow Builder)
+  const [bScene, bCode, bOpts, bAns, bFix] = BUGS[n];
+  const bR = shuffleIdx(bOpts.length, n + 7); const bAnsS = bR.indexOf(bAns);
+  const fl = TB.flow; const fOrder = shuffleIdx(fl.length, n);
+  S.push(B.sec({ id: 'mini-games', group: G, eyebrow: 'Mini games', title: '🎮 2 mini games — khelo aur seekho', sub: `Har game jeetne par +${XP.game} XP. Galat hua to koi baat nahi — explanation padho aur dobara try karo.`, body: `<div class="grid g2 games">
+      <div class="game card reveal" data-bug="${n}" data-ans="${bAnsS}" style="--c:${m.color}"><span class="g-tag">🐞 Bug Hunt</span><p class="g-scene">${esc(bScene)}</p><pre class="g-code">${esc(bCode)}</pre><b class="g-q">Galti kya hai?</b><div class="opts">${bR.map((k, i) => `<button type="button" data-k="${i}">${String.fromCharCode(65 + i)}. ${esc(bOpts[k])}</button>`).join('')}</div><p class="ex">🔧 <b>Fix:</b> ${esc(bFix)}</p><button type="button" class="btn btn-link sm g-retry" data-game-retry hidden>🔁 Dobara</button></div>
+      <div class="game card reveal" data-flow="${n}" style="--c:${m.color}"><span class="g-tag">🧩 Flow Builder</span><p class="g-scene">Aaj ke build "<b>${esc(TB.name)}</b>" ke steps gadbad ho gaye! Sahi order mein tap karo — pehla step pehle.</p>
+        <div class="fb-pool">${fOrder.map((k) => `<button type="button" class="fb-chip" data-step="${k}"><b>${esc(fl[k][0])}</b><small>${esc(fl[k][1])}</small></button>`).join('')}</div>
+        <ol class="fb-line" data-fb-line></ol><p class="fb-msg" data-fb-msg>Tap karke order banao. Galat tap = shuru se.</p><button type="button" class="btn btn-link sm" data-fb-reset>↺ Reset</button></div>
+    </div>` }));
+
   // 14 QUIZ
   S.push(B.sec({ id: 'quiz', group: G, eyebrow: 'Self-check', title: '🎯 2 minute ka self-check', sub: '5 sawaal, 2 minute. Pehli koshish ke sahi jawab par XP milta hai. Galat hua to explanation padho — wahi asli seekh hai.', body: `<div class="quiz" data-quiz="${n}">${[...L.quiz, BONUS_Q[n]].map(([q, opts0, ans0, ex], i, all) => { const r = (n + i * 3) % opts0.length; const opts = opts0.map((_, k) => opts0[(k + r) % opts0.length]); const ans = (ans0 - r + opts0.length) % opts0.length; return `<div class="qz card reveal" data-ans="${ans}" style="--d:${i * 60}ms"><b>${i === all.length - 1 ? '⭐ Bonus · ' : ''}Q${i + 1}. ${esc(q)}</b><div class="opts">${opts.map((o, k) => `<button data-k="${k}">${String.fromCharCode(65 + k)}. ${esc(o)}</button>`).join('')}</div><p class="ex">${esc(ex || 'Sahi jawab highlighted hai.')}</p></div>`; }).join('')}<div class="qz-foot"><p class="qz-score" data-score>Score: 0 / ${L.quiz.length + 1}</p><span class="xp-tag">+${XP.quiz} XP har sahi jawab · saare sahi = +${XP.perfect} bonus</span><button type="button" class="btn btn-ghost sm qz-retry" data-quiz-retry hidden>🔁 Dobara practice karo</button></div></div>` }));
 
@@ -145,7 +165,13 @@ function renderLesson(n) {
 
   // 16 DOCS
   const allDocs = [...d.resources, ...L.docs].filter((x, i, a) => a.findIndex((y) => y[1] === x[1]) === i);
-  S.push(B.sec({ id: 'docs', group: G, eyebrow: 'Official docs', title: 'n8n docs & reading list', body: `<div class="dl-list">${allDocs.map(([t, u], i) => `<a href="${esc(u)}" target="_blank" rel="noopener" class="dl reveal" style="--d:${i * 50}ms"><span>📚</span>${esc(t)}<i>↗</i></a>`).join('')}</div><p class="hint">Saare docs ek jagah: <a href="/docs">Docs Hub →</a></p>` }));
+  const [tplQ, comQ] = READ[n];
+  const best3 = [
+    ['📘 Official guide', allDocs[0][0], allDocs[0][1], 'Beginner', 'n8n team ka likha — sabse sahi aur updated.'],
+    ['🧩 Ready templates', `"${tplQ}" ke n8n templates`, `https://n8n.io/workflows/?search=${encodeURIComponent(tplQ)}`, 'Practice', 'Dusron ke bane workflows import karke dekho — fastest way to learn.'],
+    ['💬 Community Q&A', `"${comQ}" par sawaal-jawab`, `https://community.n8n.io/search?q=${encodeURIComponent(comQ)}`, 'Pro', 'Asli problems aur unke solutions — atakne par yahan dekho.'],
+  ];
+  S.push(B.sec({ id: 'docs', group: G, eyebrow: 'Official docs', title: 'n8n docs & reading list', body: `<h4 class="stk-h reveal">📌 Aage padho — sirf best 3</h4><div class="grid g3 best3">${best3.map(([k, t, u, lvl, why], i) => `<a class="card b3 reveal" href="${esc(u)}" target="_blank" rel="noopener" style="--d:${i * 60}ms"><span class="b3-k">${k}</span><b>${esc(t)}</b><p>${esc(why)}</p><span class="b3-l l-${lvl.toLowerCase()}">${lvl}</span></a>`).join('')}</div><h4 class="stk-h reveal">📚 Poori reading list</h4><div class="dl-list">${allDocs.map(([t, u], i) => `<a href="${esc(u)}" target="_blank" rel="noopener" class="dl reveal" style="--d:${i * 50}ms"><span>📚</span>${esc(t)}<i>↗</i></a>`).join('')}</div><p class="hint">Saare docs ek jagah: <a href="/docs">Docs Hub →</a> · Topic-wise filter: <a href="/library">📚 Library →</a>${[7, 14, 21].includes(n) ? ' · 🏟️ Aaj revision day hai: <a href="/arena">Revision Arena kholo →</a>' : ''}</p>` }));
 
   // 17 NODES USED + NEXT
   const used = [...new Set(L.steps.map(([x]) => x))].map(findNode).filter(Boolean);
