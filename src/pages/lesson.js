@@ -13,6 +13,7 @@ const { buildBlock } = require('../buildview');
 const { challenges } = require('../student');
 const { DEEP } = require('../deep');
 const { shotFor } = require('../shots');
+const { BONUS_Q, XP } = require('../game');
 
 const modById = Object.fromEntries(modules.map((m) => [m.id, m]));
 const nodeByName = Object.fromEntries(nodes.map((n) => [n.name.toLowerCase(), n]));
@@ -132,11 +133,12 @@ function renderLesson(n) {
 
   // 13b CHALLENGE (hints)
   const [cT, h1, h2, sol] = challenges[n];
-  S.push(B.sec({ id: 'challenge', group: G, eyebrow: 'Challenge', title: '🧩 Aaj ka challenge — pehle khud try karo', sub: 'Seedha solution mat kholna 😉 Pehle 5 minute khud socho, phir ek-ek hint kholo.', body: `<div class="chl reveal" style="--c:${m.color}"><p class="chl-task">🎯 ${esc(cT)}</p>
-      <div class="chl-steps"><details class="chl-h"><summary>💡 Hint 1</summary><p>${esc(h1)}</p></details><details class="chl-h"><summary>💡 Hint 2</summary><p>${esc(h2)}</p></details><details class="chl-h sol"><summary>✅ Solution dekho</summary><p>${esc(sol)}</p></details></div></div>` }));
+  S.push(B.sec({ id: 'challenge', group: G, eyebrow: 'Challenge', title: '🧩 Aaj ka challenge — pehle khud try karo', sub: 'Seedha solution mat kholna 😉 Pehle 5 minute khud socho, phir ek-ek hint kholo.', body: `<div class="chl reveal" data-chal="${n}" style="--c:${m.color}"><p class="chl-task">🎯 ${esc(cT)}</p>
+      <div class="chl-steps"><details class="chl-h" data-hint="1"><summary>💡 Hint 1 <small>−${XP.hintCost} XP</small></summary><p>${esc(h1)}</p></details><details class="chl-h" data-hint="2"><summary>💡 Hint 2 <small>−${XP.hintCost} XP</small></summary><p>${esc(h2)}</p></details><details class="chl-h sol" data-sol><summary>✅ Solution dekho</summary><p>${esc(sol)}</p></details></div>
+      <div class="chl-done"><button type="button" class="btn btn-primary sm" data-chal-done="${n}">🏁 Maine solve kar liya</button><span class="xp-tag" data-chal-xp>Bina hint: +${XP.challenge} XP</span></div></div>` }));
 
   // 14 QUIZ
-  S.push(B.sec({ id: 'quiz', group: G, eyebrow: 'Self-check', title: '🎯 2 minute ka self-check', sub: 'Score sirf aapko dikhta hai. Galat hua to explanation padho — wahi asli seekh hai.', body: `<div class="quiz" data-quiz>${L.quiz.map(([q, opts0, ans0, ex], i) => { const r = (n + i * 3) % opts0.length; const opts = opts0.map((_, k) => opts0[(k + r) % opts0.length]); const ans = (ans0 - r + opts0.length) % opts0.length; return `<div class="qz card reveal" data-ans="${ans}" style="--d:${i * 60}ms"><b>Q${i + 1}. ${esc(q)}</b><div class="opts">${opts.map((o, k) => `<button data-k="${k}">${String.fromCharCode(65 + k)}. ${esc(o)}</button>`).join('')}</div><p class="ex">${esc(ex || 'Sahi jawab highlighted hai.')}</p></div>`; }).join('')}<p class="qz-score" data-score>Score: 0 / ${L.quiz.length}</p></div>` }));
+  S.push(B.sec({ id: 'quiz', group: G, eyebrow: 'Self-check', title: '🎯 2 minute ka self-check', sub: '5 sawaal, 2 minute. Pehli koshish ke sahi jawab par XP milta hai. Galat hua to explanation padho — wahi asli seekh hai.', body: `<div class="quiz" data-quiz="${n}">${[...L.quiz, BONUS_Q[n]].map(([q, opts0, ans0, ex], i, all) => { const r = (n + i * 3) % opts0.length; const opts = opts0.map((_, k) => opts0[(k + r) % opts0.length]); const ans = (ans0 - r + opts0.length) % opts0.length; return `<div class="qz card reveal" data-ans="${ans}" style="--d:${i * 60}ms"><b>${i === all.length - 1 ? '⭐ Bonus · ' : ''}Q${i + 1}. ${esc(q)}</b><div class="opts">${opts.map((o, k) => `<button data-k="${k}">${String.fromCharCode(65 + k)}. ${esc(o)}</button>`).join('')}</div><p class="ex">${esc(ex || 'Sahi jawab highlighted hai.')}</p></div>`; }).join('')}<div class="qz-foot"><p class="qz-score" data-score>Score: 0 / ${L.quiz.length + 1}</p><span class="xp-tag">+${XP.quiz} XP har sahi jawab · saare sahi = +${XP.perfect} bonus</span><button type="button" class="btn btn-ghost sm qz-retry" data-quiz-retry hidden>🔁 Dobara practice karo</button></div></div>` }));
 
   // 15 VIDEOS
   S.push(B.sec({ id: 'videos', group: G, eyebrow: 'Watch', title: 'Video resources', sub: 'YouTube par latest tutorials (search links hamesha fresh results dete hain) + n8n ka official channel.', body: `<div class="grid g3">${[...L.videos.map((q) => [q, yt(q)]), ['n8n official YouTube channel', 'https://www.youtube.com/@n8n-io']].map(([t, u], i) => `<a class="card vcard reveal" href="${esc(u)}" target="_blank" rel="noopener" style="--d:${i * 70}ms"><div class="vthumb" style="--c:${m.color}"><span>▶</span></div><h3>${esc(t)}</h3><small>YouTube ↗</small></a>`).join('')}</div>` }));
@@ -148,7 +150,7 @@ function renderLesson(n) {
   // 17 NODES USED + NEXT
   const used = [...new Set(L.steps.map(([x]) => x))].map(findNode).filter(Boolean);
   S.push(B.sec({ id: 'nodes-used', group: G, eyebrow: 'Nodes library', title: 'Aaj kaunse nodes use hue', body: `<div class="grid g4">${used.map((nd, i) => `<a href="/nodes#${nd.id}" class="card node-mini reveal" style="--d:${i * 50}ms"><span class="nm-ic">${iconFor(nd.name)}</span><b>${esc(nd.name)}</b><small>${esc(nd.desc)}</small></a>`).join('')}</div>
-    <div class="done-box reveal" data-day="${n}"><div><b>Aaj ka din ho gaya? 🎉</b><span>Tick karo — aapka progress isi browser mein save hoga.</span></div><button class="btn btn-primary" data-complete="${n}">✅ Day ${n} complete</button></div>
+    <div class="done-box reveal" data-day="${n}"><div><b>Aaj ka din ho gaya? 🎉</b><span>Tick karo, <b class="xp-inline">+${XP.lesson} XP</b> pao. Progress isi browser mein save hota hai · <a href="/progress">🎮 Mera progress</a></span></div><button class="btn btn-primary" data-complete="${n}">✅ Day ${n} complete</button></div>
     <nav class="lesson-next reveal">${n > 1 ? `<a href="/day/${n - 1}" class="btn btn-ghost">← Day ${n - 1}</a>` : '<span></span>'}<a href="/#enroll" class="btn btn-ghost">🎓 Enroll</a>${n < cfg.totalDays ? `<a href="/day/${n + 1}" class="btn btn-primary magnetic">Next: Day ${n + 1} →</a>` : '<a href="/#capstone" class="btn btn-primary">Capstone →</a>'}</nav>` }));
 
   // 18 MENTOR NOTES (sirf Mentor mode mein)
