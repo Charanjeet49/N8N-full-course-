@@ -13,8 +13,10 @@ const PAGES = () => {
   const { renderProgress } = require('./pages/progress');
   const { renderBusiness, renderIndustry } = require('./pages/business');
   const { INDUSTRIES } = require('./bizlib');
+  const { renderArena } = require('./pages/arena');
+  const { renderLibrary } = require('./pages/library');
   const { totalDays } = require('./config');
-  const map = { '/': render, '/nodes': renderNodes, '/docs': renderDocs, '/resources': renderResources, '/setup': renderSetup, '/cheatsheets': renderCheatsheets, '/mentor': renderMentor, '/progress': renderProgress, '/business': renderBusiness };
+  const map = { '/': render, '/nodes': renderNodes, '/docs': renderDocs, '/resources': renderResources, '/setup': renderSetup, '/cheatsheets': renderCheatsheets, '/mentor': renderMentor, '/progress': renderProgress, '/business': renderBusiness, '/arena': renderArena, '/library': renderLibrary };
   for (const ind of INDUSTRIES) map[`/business/${ind.slug}`] = () => renderIndustry(ind.slug);
   for (let d = 1; d <= totalDays; d++) map[`/day/${d}`] = () => renderLesson(d);
   return map;

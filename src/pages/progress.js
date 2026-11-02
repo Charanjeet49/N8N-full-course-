@@ -55,6 +55,8 @@ function renderProgress() {
     ['💡', 'Har hint kholne par', `−${XP.hintCost} XP (challenge se)`],
     ['✅', 'Solution dekh ke challenge kiya', `+${XP.solutionXp} XP`],
     ['🧰', 'Day 0 setup poora', `+${XP.setup} XP`],
+    ['🐞', 'Bug Hunt / Flow Builder jeeto (har din)', `+${XP.game} XP`],
+    ['🏟️', 'Revision Arena — har sahi jawab (din ka pehla round)', `+${XP.arena} XP`],
     ['💼', 'Business Track: industry ka Level 1 project', `+${XP.project} XP`],
   ];
   S.push(B.sec({

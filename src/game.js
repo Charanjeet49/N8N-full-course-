@@ -12,6 +12,8 @@ const XP = {
   hintCost: 25, // har hint kholne par challenge XP kam
   solutionXp: 25, // solution dekh ke kiya to bhi kuch XP
   setup: 50, // Day 0 setup poora
+  game: 15, // Bug Hunt / Flow Builder jeetne par
+  arena: 5, // Revision Arena: har sahi jawab (din mein ek round)
   project: 100, // Business Track: industry ka Level 1 project bana liya
 };
 
@@ -50,6 +52,9 @@ const BADGES = [
   { id: 'chal10', i: '👑', t: 'Challenge King', d: '10 challenges solve', type: 'chal', v: 10 },
   { id: 'biz1', i: '💼', t: 'Pehla Client Project', d: 'Business Track ka pehla Level 1 project', type: 'biz', v: 1 },
   { id: 'biz5', i: '🏢', t: 'Industry Pro', d: '5 industries ke Level 1 projects', type: 'biz', v: 5 },
+  { id: 'bug5', i: '🐞', t: 'Bug Hunter', d: '5 Bug Hunt jeete', type: 'bug', v: 5 },
+  { id: 'flow5', i: '🔗', t: 'Flow Master', d: '5 Flow Builder jeete', type: 'flow', v: 5 },
+  { id: 'arena1', i: '🏟️', t: 'Revision Warrior', d: 'Revision Arena ka pehla round', type: 'arena', v: 1 },
   { id: 'streak3', i: '🔥', t: '3 Din Streak', d: 'Lagataar 3 din kuch seekha', type: 'streak', v: 3 },
   { id: 'streak7', i: '☄️', t: 'Hafta Pakka', d: 'Lagataar 7 din streak', type: 'streak', v: 7 },
 ];
