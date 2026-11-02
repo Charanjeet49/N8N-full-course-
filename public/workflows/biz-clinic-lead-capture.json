@@ -1,0 +1,196 @@
+{
+  "name": "Business — Clinic / Hospital: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Clinic / Hospital: Lead Capture → Sheet + Telegram\nBusiness Track · Clinic / Hospital · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Appointments\", pehli row mein form ke labels + appt_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/clinic (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "5354bf94-dbe6-4e57-a193-521a0786731a",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Dr. Mehta Skin Clinic — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Patient name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Doctor",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Dr. Mehta"
+                  },
+                  {
+                    "option": "Dr. Shah"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Preferred date",
+              "requiredField": true,
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "Reason for visit",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ae4eb22-ff74-448c-ac1f-7c42be0ed731",
+      "name": "Clinic / Hospital Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "d7780897-3071-42af-a16a-8795b8297631"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "47187090-ced7-48ca-a6e0-0bd7ac851ed8",
+              "name": "appt_id",
+              "value": "=AP-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "c60fc4c4-27ef-47be-a9af-9be7d32d7e5d",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "50b79f03-6db3-4cef-a2c9-fc54f45432c0",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "2c481c98-1178-4736-a605-ff91c85dfe93",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "ca6fffc1-6ba8-4434-aa61-06a11691d0ee",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Appointments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "9e1dfe3c-5513-4a8d-a493-eb4233796fc3",
+      "name": "Save to Appointments",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🩺 Naya appointment request\n👤 {{ $json[\"Patient name\"] }} · 📞 {{ $json.Phone }}\n👨‍⚕️ {{ $json.Doctor }} · 🗓 {{ $json[\"Preferred date\"] }}\n📝 {{ $json[\"Reason for visit\"] }}",
+        "additionalFields": {}
+      },
+      "id": "0ca54fd3-71f0-47b0-a79f-c7b49bb6b01d",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Clinic / Hospital Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Appointments",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

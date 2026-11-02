@@ -22,7 +22,7 @@ console.log(`\nPages: ${Object.keys(pages).length} · Total sections: ${total}`)
 if (bad) { console.error(`❌ ${bad} problem(s)`); process.exit(1); }
 // workflow JSON: generated files up to date + connections valid
 const { builds } = require('../src/buildlib');
-for (const b of Object.values(builds())) {
+for (const b of [...Object.values(builds()), ...Object.values(require('../src/bizlib').bizBuilds())]) {
   const f = require('path').join(__dirname, '..', 'public', 'workflows', b.file);
   if (!require('fs').existsSync(f) || require('fs').readFileSync(f, 'utf8') !== b.jsonText + '\n') { console.error('Stale workflow file (run npm run workflows):', b.file); bad++; }
   const names = new Set(b.json.nodes.map((n) => n.name));

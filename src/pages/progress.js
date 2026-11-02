@@ -55,6 +55,7 @@ function renderProgress() {
     ['💡', 'Har hint kholne par', `−${XP.hintCost} XP (challenge se)`],
     ['✅', 'Solution dekh ke challenge kiya', `+${XP.solutionXp} XP`],
     ['🧰', 'Day 0 setup poora', `+${XP.setup} XP`],
+    ['💼', 'Business Track: industry ka Level 1 project', `+${XP.project} XP`],
   ];
   S.push(B.sec({
     id: 'xp-rules', group: 'Rules', eyebrow: 'XP kaise milta hai', title: '⚡ XP rules aur levels',

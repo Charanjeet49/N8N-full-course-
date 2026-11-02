@@ -1,0 +1,203 @@
+{
+  "name": "Business — Digital Marketing Agency: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Digital Marketing Agency: Lead Capture → Sheet + Telegram\nBusiness Track · Digital Marketing Agency · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Clients\", pehli row mein form ke labels + client_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/agency (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "ea8d1c67-7587-4631-a7e8-374c72e06a90",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "GrowthLab Digital — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Brand name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contact email",
+              "requiredField": false,
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Services needed",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "SEO"
+                  },
+                  {
+                    "option": "Ads"
+                  },
+                  {
+                    "option": "Social media"
+                  },
+                  {
+                    "option": "Website"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Monthly budget (₹)",
+              "requiredField": false,
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cc8f8bec-9205-45af-a01b-09e26afd97a0",
+      "name": "Digital Marketing Agency Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "70a9fcf1-1d37-4e8b-a614-75d8080068e4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f5df3f8-4954-4363-ae63-bdfb8fe451e2",
+              "name": "client_id",
+              "value": "=CL-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "d100aa43-1dcb-4bde-a473-855ca624fb8b",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "ebfbbd34-e45b-4a6d-a798-c1857bb54090",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "f51fcb3a-9aa1-452c-ad78-da5cebfdc9cd",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "f979d237-707c-441f-acbd-b833434cd48c",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Clients",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "4468243f-e09d-4222-adbc-01d21da03086",
+      "name": "Save to Clients",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=📣 Naya client brief!\n🏷 {{ $json[\"Brand name\"] }} · 📧 {{ $json[\"Contact email\"] }}\n📞 {{ $json.Phone }} · {{ $json[\"Services needed\"] }}\n💰 ₹{{ $json[\"Monthly budget (₹)\"] }}/mahina",
+        "additionalFields": {}
+      },
+      "id": "334af592-d729-4940-a4a8-b730c366de75",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Digital Marketing Agency Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Clients",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

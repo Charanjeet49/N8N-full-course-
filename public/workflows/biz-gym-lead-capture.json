@@ -1,0 +1,195 @@
+{
+  "name": "Business — Gym / Fitness Studio: Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Business Track — Gym / Fitness Studio: Lead Capture → Sheet + Telegram\nBusiness Track · Gym / Fitness Studio · Level 1 project\n\n**Setup:**\n- Connect: Google Sheets (Google OAuth)\n- Connect: Telegram bot token (BotFather se)\n- Google Sheet banao, tab ka naam \"Members\", pehli row mein form ke labels + member_id, created_at, stage, source\n- Sheet ID \"Save\" node mein paste karo\n- Telegram chat ID @userinfobot se lo\n\nCourse: /business/gym (Level 1 project)",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "a49a3358-7039-498b-a29e-fa332895201c",
+      "name": "Setup Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "FitZone Gym — enquiry",
+        "formDescription": "Apni details bharo, hum turant sampark karenge.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Goal",
+              "requiredField": true,
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Weight loss"
+                  },
+                  {
+                    "option": "Muscle gain"
+                  },
+                  {
+                    "option": "General fitness"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Trial date",
+              "requiredField": true,
+              "fieldType": "date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ba8bd899-1b2d-49c6-a122-804c333f0f85",
+      "name": "Gym / Fitness Studio Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "ef20a904-a341-40c2-a04d-9521c001c604"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9cb287a5-6386-4ca0-a1a2-a991548ae0ad",
+              "name": "member_id",
+              "value": "=M-{{ $now.toFormat(\"MMddHHmmss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "ff1cc129-5224-42c2-a41a-0724923f7fb9",
+              "name": "created_at",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "1f20eb16-46f2-4f4e-af5f-2a4e47714d83",
+              "name": "stage",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "c36a8568-6a74-481f-a25c-f994be11b87a",
+              "name": "source",
+              "value": "n8n form",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "id": "407844d0-c7c4-4769-abfb-cf0c45e2296e",
+      "name": "Add ID + Time",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "ef99d543-c6e0-4253-ac0f-adeed8f36340",
+      "name": "Save to Members",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🏋️ Naya free trial!\n👤 {{ $json.Name }} · 📞 {{ $json.Phone }}\n🎯 {{ $json.Goal }} · 🗓 {{ $json[\"Trial date\"] }}",
+        "additionalFields": {}
+      },
+      "id": "7b0d5306-dcf7-4336-a619-d79a3c9ff01d",
+      "name": "Alert Owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Gym / Fitness Studio Form": {
+      "main": [
+        [
+          {
+            "node": "Add ID + Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add ID + Time": {
+      "main": [
+        [
+          {
+            "node": "Save to Members",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

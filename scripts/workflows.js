@@ -9,6 +9,7 @@ const out = path.join(__dirname, '..', 'public', 'workflows');
 fs.mkdirSync(out, { recursive: true });
 const files = [];
 for (const b of Object.values(builds())) files.push([b.file, b.jsonText + '\n']);
+for (const b of Object.values(require('../src/bizlib').bizBuilds())) files.push([b.file, b.jsonText + '\n']);
 for (const [name, content] of Object.entries(assets)) files.push([name, content]);
 files.push(['README.txt', 'n8n Course — Workflow Pack\n\nImport kaise karein:\n1. n8n kholo → naya workflow\n2. .json file ka poora content copy karo → canvas par Ctrl+V (Mac: Cmd+V)\n   YA: ... menu → Import from File\n3. Har workflow ke "Setup Note" (peela sticky) mein likhe credentials connect karo\n4. Test workflow → sab green → Active\n\nFiles:\n' + files.map((f) => ' - ' + f[0]).join('\n') + '\n']);
 for (const [name, content] of files) fs.writeFileSync(path.join(out, name), content);
