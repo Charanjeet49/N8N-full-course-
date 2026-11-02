@@ -253,3 +253,40 @@ kbd { font: 600 7.5pt var(--mono); background: #fff; border: 1px solid var(--lin
 .na-g { display: grid; grid-template-columns: 50mm 1fr; gap: 4mm; align-items: start; }
 .na-g .shot.sm { width: 100%; margin: 0; } .na-g .shot.sm img { max-height: 100mm; }
 .na { break-inside: avoid; } .na-h { break-after: avoid; } .nat tr { break-inside: avoid; }
+
+/* ---------- BUSINESS TRACK PDF ---------- */
+.bz-ol { margin: 0; padding-left: 16px; } .bz-ol li { margin: 2px 0; }
+.bz-toc { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5mm; }
+.bz-toc a { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; padding: 7px 10px; border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 10px; break-inside: avoid; }
+.bz-toc span { grid-row: span 2; font: 800 13pt var(--mono); color: var(--c); }
+.bz-toc b { font-size: 9.5pt; } .bz-toc small { color: var(--mut); font-size: 7.6pt; line-height: 1.3; }
+.bz-deck { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-bottom: 3mm; }
+.bz-card { border: 1px solid var(--line); border-radius: 12px; padding: 9px 11px; background: var(--soft); break-inside: avoid; }
+.bz-card-h { display: flex; align-items: center; gap: 8px; } .bz-card-h span { font-size: 16pt; } .bz-card-h b { font-size: 10.5pt; } .bz-card-h em { margin-left: auto; font-style: normal; font-size: 13pt; color: #7c3aed; }
+.bz-card p { margin: 4px 0; font-size: 8.4pt; } .bz-card small { display: block; color: var(--mut); font-size: 7.4pt; margin-top: 4px; }
+.bz-days { white-space: nowrap; }
+.bz-day { display: inline-block; font: 700 6.8pt var(--mono); padding: 1px 4px; margin: 1px 2px 1px 0; border-radius: 4px; background: color-mix(in srgb, var(--c) 14%, #fff); color: color-mix(in srgb, var(--c) 80%, #000); }
+td.bz-days { white-space: normal; width: 22mm; }
+.bz-div { padding: 7mm 9mm; }
+.bz-pain td:nth-child(2), .bz-pain td:nth-child(3) { white-space: nowrap; }
+.bz-bar { width: 38mm; } .bz-bar i { display: block; height: 4px; border-radius: 2px; background: #f3b4b4; margin: 2px 0; } .bz-bar i.a { background: #22a06b; }
+.bz-tot td { background: var(--soft); }
+.bz-k { color: var(--mut); font-size: 7pt; }
+.bz-schema td:first-child { white-space: nowrap; } .bz-schema small { color: var(--mut); font: 7pt var(--mono); }
+.bz-more { margin-top: 2.5mm; }
+.bz-ladder { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5mm; }
+.bz-rung { border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 10px; padding: 7px 9px; break-inside: avoid; }
+.bz-rung:nth-child(2) { border-top-color: color-mix(in srgb, var(--c) 70%, #120e26); } .bz-rung:nth-child(3) { border-top-color: #120e26; }
+.bz-rung > span { font: 800 7pt var(--mono); color: var(--c); letter-spacing: .08em; text-transform: uppercase; }
+.bz-rung b { display: block; font-size: 9pt; margin: 2px 0; } .bz-rung p { font-size: 7.8pt; margin: 0 0 4px; color: var(--mut); } .bz-rung small { font-size: 7.4pt; }
+.bz-note { font-size: 8pt; color: var(--mut); margin: 2mm 0 0; }
+.bz-money { margin-top: 3mm; } .bz-big { font-size: 12pt; color: #0f8a4f; }
+.bz-pitch { font-style: italic; font-size: 9.5pt; margin: 0; }
+.bz-obj { margin: 0 0 5px; font-size: 8.2pt; }
+.bz-twists { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; }
+.bz-tw { border: 1.5px dashed #f59e0b; border-radius: 10px; padding: 7px 8px; break-inside: avoid; background: #fffaf0; }
+.bz-tw span { font-size: 15pt; } .bz-tw b { display: block; font-size: 8.8pt; } .bz-tw p { font-size: 7.6pt; margin: 3px 0; } .bz-tw small { font-size: 7pt; color: var(--mut); }
+.bz-chits { display: flex; flex-wrap: wrap; gap: 2mm; }
+.bz-chits span { border: 1.5px dashed var(--c); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: 9pt; }
+.bz-score td, .bz-score th { text-align: left; } .bz-score td:nth-child(n+3) { width: 15mm; border-left: 1px solid var(--line); }
+.bz-score tr td { height: 9mm; vertical-align: middle; }
