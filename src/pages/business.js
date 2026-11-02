@@ -9,6 +9,8 @@ const { layout } = require('../layout');
 const { esc, pad, makeBuilder, flowDiagram } = require('../kit');
 const { INDUSTRIES, DECK, bizBuilds } = require('../bizlib');
 const { XP } = require('../game');
+const { BATTLE } = require('../battle');
+const PDF = '/pdf/business-track.pdf';
 
 const dayTitle = Object.fromEntries(days.map((d) => [d.day, d.title]));
 const dayLinks = (list) => list.map((d) => `<a class="biz-day" href="/day/${d}" title="${esc(dayTitle[d])}">Day ${d}</a>`).join('');
@@ -29,7 +31,7 @@ function renderBusiness() {
     body: `<div class="reveal"><span class="eyebrow">💼 Business Track · ${INDUSTRIES.length} industries</span>
       <h1 class="lh-title">Har business ke liye<br><span class="grad">AI agents ka ready blueprint</span></h1>
       <p class="lead">Travel company ho, real estate ya clinic — yahan har industry ka ek "mission" hai: unki asli problem, kaunse AI agents banenge, Google Sheet ka schema, 3 level ke projects aur ek ready n8n workflow. Students ke liye practice, business owners ke liye roadmap.</p>
-      <div class="hero-cta"><a href="#industries" class="btn btn-primary magnetic">🏢 Apni industry chuno</a><a href="#agent-deck" class="btn btn-ghost">🃏 Agent Deck</a></div></div>`,
+      <div class="hero-cta"><a href="#industries" class="btn btn-primary magnetic">🏢 Apni industry chuno</a><a href="#agent-deck" class="btn btn-ghost">🃏 Agent Deck</a><a href="${PDF}" class="btn btn-ghost" download>📕 Business Track PDF</a></div></div>`,
   }));
   S.push(B.sec({
     id: 'industries', group: 'Industries', eyebrow: `${INDUSTRIES.length} missions`, title: '🏢 Industry chuno, mission shuru karo',
@@ -50,7 +52,20 @@ function renderBusiness() {
     id: 'how-to-use', group: 'Kaise padhein', eyebrow: 'Kaise use karein', title: '🧭 Is track ko kaise use karein',
     body: `<div class="grid g2"><div class="panel reveal"><h4>🎓 Student ho to</h4><ol class="biz-steps"><li>Course ke din ke saath chalo — har agent ke neeche likha hai kaunse din seekha.</li><li>Ek industry chuno aur uska <b>Level 1</b> project banao (JSON ready hai).</li><li>"Mission done" tick karo — <b>+${XP.project} XP</b> aur badge milega.</li><li>Level 2/3 ko apne portfolio project ki tarah banao.</li></ol></div>
       <div class="panel reveal"><h4>💼 Business owner ho to</h4><ol class="biz-steps"><li>Apni industry ka page kholo aur "Pain map" dekho — kitna time bach sakta hai.</li><li>ROI calculator mein apne numbers daalo.</li><li>Level 1 se shuru karo (1 ghanta), phir AI agents jodo.</li><li>Madad chahiye? <a href="https://wa.me/${esc(cfg.contact.whatsapp)}?text=${encodeURIComponent('Mujhe apne business ke liye AI automation chahiye')}" target="_blank" rel="noopener">WhatsApp karo</a>.</li></ol></div></div>
-      <p class="hint reveal">ℹ️ Kahaniyon ke business naam kalpanik hain aur pricing andaaza hai — apne shehar aur client ke hisaab se badlo.</p>`,
+      <p class="hint reveal">ℹ️ Kahaniyon ke business naam kalpanik hain aur pricing andaaza hai — apne shehar aur client ke hisaab se badlo.</p>
+      <a class="biz-pdf reveal" href="${PDF}" download><span>📕</span><div><b>Business Track PDF — ${INDUSTRIES.length} industries, ek file mein</b><small>Har industry: story, pain map, agents, schema, 3 projects, Level 1 flow, ROI aur pitch. Print karke class mein ya client meeting mein use karo.</small></div><em>⬇ Download</em></a>`,
+  }));
+  const BT = BATTLE;
+  S.push(B.sec({
+    id: 'speed-build-battle', group: 'Mentor', mentor: true, eyebrow: 'Sirf mentor · 2 ghante ki class', title: '🏁 Speed Build Battle — class guide',
+    sub: 'Teams industry card kheenchti hain, Level 1 banati hain, twist card jodti hain, phir 2 minute ka demo + pitch. Printable version mentor PDF (pdf-mentor/business-track-mentor.pdf) mein hai.',
+    body: `<div class="grid g2"><div class="panel reveal"><h4>🗓️ Kab chalayein</h4><p>${esc(BT.when)}</p><h4>👥 Teams</h4><p>${esc(BT.team)}</p></div>
+      <div class="panel reveal"><h4>🧰 Class se pehle</h4><ul class="biz-steps">${BT.need.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div></div>
+      <div class="panel reveal"><h4>⏱️ Class plan</h4><div class="bt-plan">${BT.plan.map(([t, a, d]) => `<div><span>${t} min</span><b>${esc(a)}</b><p>${esc(d)}</p></div>`).join('')}</div></div>
+      <h4 class="reveal" style="margin-top:22px">🃏 Twist cards</h4>
+      <div class="bt-twists">${BT.twists.map(([i, t, d, n, day]) => `<div class="bt-tw reveal"><span>${i}</span><b>${esc(t)}</b><p>${esc(d)}</p><small>Hint: <code>${esc(n)}</code> · <a href="/day/${day}">Day ${day}</a></small></div>`).join('')}</div>
+      <div class="grid g2" style="margin-top:22px"><div class="panel reveal"><h4>🏆 Scoring (100)</h4><ul class="xp-rules">${BT.score.map(([t, m]) => `<li><span>✓</span>${esc(t)}<b>${m}</b></li>`).join('')}</ul></div>
+      <div class="panel reveal"><h4>👨‍🏫 Mentor tips</h4><ul class="biz-steps">${BT.tips.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div></div>`,
   }));
   return layout({
     title: `Business Track — industry-wise AI agents & n8n projects | ${cfg.brand}`,
@@ -77,7 +92,7 @@ function renderIndustry(slug) {
           <h1 class="lh-title">${esc(ind.name)}<br><span class="grad">${esc(ind.tagline)}</span></h1>
           <div class="biz-story"><b>📖 ${esc(ind.story.biz)}</b><p>${esc(ind.story.text)}</p></div>
           <div class="biz-mission"><span>🎯 Aapka mission</span><p>${esc(ind.story.mission)}</p></div>
-          <div class="hero-cta"><a href="#level-1" class="btn btn-primary magnetic">⚡ Level 1 workflow (JSON)</a><a href="#agents" class="btn btn-ghost">🤖 Agents</a><a href="#roi" class="btn btn-ghost">💰 ROI</a></div></div>
+          <div class="hero-cta"><a href="#level-1" class="btn btn-primary magnetic">⚡ Level 1 workflow (JSON)</a><a href="#agents" class="btn btn-ghost">🤖 Agents</a><a href="#roi" class="btn btn-ghost">💰 ROI</a><a href="${PDF}" class="btn btn-ghost" download>📕 PDF</a></div></div>
         <div class="biz-badge" style="--c:${ind.color}"><span>${ind.i}</span><b>${ind.agents.length} agents</b><small>3 projects · 1 ready workflow</small></div>
       </div>`,
   }));

@@ -305,4 +305,4 @@ function renderBook() {
   return doc({ title: `${cfg.courseName} — Complete Notes`, header: `${cfg.courseName} · Complete notes`, body });
 }
 
-module.exports = { renderNotes, renderBook, pdfName, BASE };
+module.exports = { renderNotes, renderBook, pdfName, BASE, doc, h2, box, flow, linkCard, LOGO };
