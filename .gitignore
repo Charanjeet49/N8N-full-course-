@@ -4,3 +4,4 @@ data/leads.jsonl
 .env
 *.log
 .DS_Store
+data/leaderboard.json

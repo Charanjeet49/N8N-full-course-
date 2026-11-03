@@ -23,6 +23,7 @@ function renderProgress() {
         <div class="lvl-top"><span class="lvl-ic" data-lvl-icon>${LEVELS[0].i}</span><div><small>Aapka level</small><b data-lvl-name>${esc(LEVELS[0].t)}</b><em data-lvl-line>${esc(LEVELS[0].line)}</em></div></div>
         <div class="lvl-bar"><span data-lvl-bar style="width:0%"></span></div>
         <p class="lvl-next" data-lvl-next>Agle level tak ${LEVELS[1].xp} XP</p>
+        <a href="/leaderboard" class="lvl-lb">🏆 Leaderboard par apna rank dekho →</a>
         <div class="lvl-stats">
           <div><b data-stat="xp">0</b><small>XP</small></div>
           <div><b data-stat="days">0</b><small>/ ${cfg.totalDays} din</small></div>
