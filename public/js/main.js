@@ -487,6 +487,64 @@
     const revoke = (key) => { const l = log(); if (l[key] === undefined) return; delete l[key]; lstore.set('n8n_xp', l); paintHud(); };
     window.__game = { award, revoke, XP: G.XP };
 
+    // ---- Leaderboard (opt-in): XP badle to server par score update ----
+    (() => {
+      const me = () => lstore.get('n8n_lb', null);
+      const payload = (m) => { const s = stats(); return { id: m.id, name: m.name, batch: m.batch, xp: s.xp, days: s.days, badges: lstore.get('n8n_badges', []).length, level: G.LEVELS[levelOf(s.xp)].i }; };
+      const post = (body) => fetch('/api/leaderboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json().catch(() => ({ ok: false })).then((j) => { if (!r.ok || !j.ok) throw new Error(j.error || 'Server error'); return j; }));
+      let t = null;
+      window.__lbSync = (force) => {
+        const m = me(); if (!m) return Promise.resolve();
+        const xp = total(); if (!force && m.last === xp) return Promise.resolve();
+        clearTimeout(t);
+        return new Promise((res) => { t = setTimeout(() => post(payload(m)).then(() => { const n = me(); if (n) { n.last = xp; lstore.set('n8n_lb', n); } }).catch(() => {}).finally(res), force ? 0 : 1500); });
+      };
+
+      const root = $('[data-lb-join]'); if (!root) { window.__lbSync(); return; }
+      const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const form = $('[data-lb-form]'); const mine = $('[data-lb-mine]'); const msg = $('[data-lb-msg]');
+      const filter = $('[data-lb-filter]'); const rows = $('[data-lb-rows]'); const podium = $('[data-lb-podium]');
+      const showMine = (on) => { form.hidden = on; mine.hidden = !on; };
+      const load = async () => {
+        const m = me();
+        try {
+          const r = await fetch(`/api/leaderboard?batch=${encodeURIComponent(filter.value)}&id=${m ? m.id : ''}`);
+          if (!r.ok) throw new Error('no api');
+          const j = await r.json();
+          const keep = filter.value;
+          filter.innerHTML = '<option value="">Saare students</option>' + j.batches.map((b) => `<option${b === keep ? ' selected' : ''}>${esc(b)}</option>`).join('');
+          $('#lbBatches').innerHTML = j.batches.map((b) => `<option value="${esc(b)}">`).join('');
+          $('[data-lb-count]').textContent = `${j.total} students`;
+          const medal = ['🥇', '🥈', '🥉'];
+          podium.innerHTML = j.top.slice(0, 3).map((e, i) => `<div class="lb-pod p${i + 1}"><span>${medal[i]}</span><b>${esc(e.name)}</b><em>${e.level} ${e.xp} XP</em><small>${esc(e.batch || '')}</small></div>`).join('');
+          const isMe = (e, i) => j.me && j.me.rank === i + 1;
+          rows.innerHTML = j.top.length ? j.top.map((e, i) => `<div class="lb-row${isMe(e, i) ? ' me' : ''}"><span>${i < 3 ? medal[i] : i + 1}</span><span><b>${esc(e.name)}</b>${e.batch ? `<small>${esc(e.batch)}</small>` : ''}</span><span>${e.level}</span><span><b>${e.xp}</b></span><span>${e.days}/25</span><span>${e.badges}</span></div>`).join('')
+            + (j.me && j.me.rank > 50 ? `<div class="lb-row me"><span>${j.me.rank}</span><span><b>${esc(j.me.name)}</b><small>aap</small></span><span>${j.me.level}</span><span><b>${j.me.xp}</b></span><span>${j.me.days}/25</span><span>${j.me.badges}</span></div>` : '')
+            : '<p class="lb-empty">Abhi koi nahi hai. Pehle aap join karo! 🚀</p>';
+          if (m && j.me) { $('[data-lb-rank]').textContent = `#${j.me.rank}`; $('[data-lb-me-name]').textContent = j.me.name; $('[data-lb-me-xp]').textContent = `${j.me.level} ${j.me.xp} XP · ${j.me.days}/25 din${filter.value ? ' · is batch mein' : ''}`; }
+        } catch (e) {
+          rows.innerHTML = '<p class="lb-empty">⚠️ Leaderboard abhi load nahi hua. Internet check karke Refresh dabao.</p>';
+        }
+      };
+      const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, '0')).join('');
+      $('[data-lb-save]').addEventListener('click', async () => {
+        const name = $('[data-lb-name]').value.trim(); const batch = $('[data-lb-batch]').value.trim();
+        if (name.length < 2) { msg.textContent = '✋ Naam kam se kam 2 letter ka likho.'; return; }
+        const m = { ...(me() || { id: rid() }), name, batch };
+        try { await post(payload(m)); m.last = total(); lstore.set('n8n_lb', m); msg.textContent = ''; showMine(true); toast('🏆 Leaderboard join ho gaya!'); load(); } catch (e) { msg.textContent = `⚠️ ${e.message}`; }
+      });
+      $('[data-lb-edit]').addEventListener('click', () => { const m = me(); $('[data-lb-name]').value = m.name; $('[data-lb-batch]').value = m.batch; showMine(false); });
+      $('[data-lb-leave]').addEventListener('click', async (ev) => {
+        const b = ev.currentTarget; if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Pakka? Dobara dabao'; return; }
+        const m = me(); try { await post({ id: m.id, leave: true }); } catch (e) { /* ignore */ }
+        lstore.set('n8n_lb', null); delete b.dataset.sure; b.textContent = 'Leaderboard chhodo'; showMine(false); load();
+      });
+      filter.addEventListener('change', load);
+      $('[data-lb-refresh]').addEventListener('click', load);
+      showMine(!!me());
+      (me() ? window.__lbSync(true) : Promise.resolve()).then(load);
+    })();
+
     // ---- Quiz (pehli koshish save hoti hai; retry = sirf practice) ----
     $$('[data-quiz]').forEach((qz) => {
       const day = qz.dataset.quiz; const score = $('[data-score]', qz); const items = $$('.qz', qz);
